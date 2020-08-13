@@ -1,5 +1,7 @@
 function MasterMerchant:initAGSIntegration()
+  --MasterMerchant.dm("Verbose", "MasterMerchant:initAGSIntegration")
   if AwesomeGuildStore.GetAPIVersion == nil then return end
+  --MasterMerchant.dm("Verbose", "AwesomeGuildStore.GetAPIVersion")
   if AwesomeGuildStore.GetAPIVersion() ~= 4 then return end
 
   local FILTER_ID = AwesomeGuildStore:GetFilterIds()

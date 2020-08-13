@@ -32,6 +32,10 @@ MasterMerchant.viewMode = 'self'
 MasterMerchant.isScanning = false
 MasterMerchant.isScanningParallel = { }
 MasterMerchant.salesData = { }
+MasterMerchant.eventsCache = { }
+MasterMerchant.eventsSeenCache = { }
+MasterMerchant.lastHistoryRequest = { }
+MasterMerchant.verboseLevel = 6
 
 if LibDebugLogger then
   local logger = LibDebugLogger.Create(MasterMerchant.name)
@@ -41,6 +45,8 @@ local SDLV = DebugLogViewer
 if SDLV then MasterMerchant.viewer = true else MasterMerchant.viewer = false end
 
 local function create_log(log_type, log_content)
+  --if not MasterMerchant.viewer and log_type == "Debug" then MasterMerchant.v(5, log_content) end
+  --if not MasterMerchant.viewer and log_type == "Verbose" then MasterMerchant.v(6, log_content) end
   if log_type == "Debug" then
     MasterMerchant.logger:Debug(log_content)
   end

@@ -9,7 +9,7 @@
 
 function MasterMerchant.v(level, ...)
   -- DEBUG
-  if (level <= MasterMerchant:ActiveSettings().verbose) then
+  if (level <= MasterMerchant.verboseLevel) then
     if ... and MasterMerchant.viewer then
       MasterMerchant.dm("Debug", ...)
     else
@@ -207,6 +207,7 @@ function MasterMerchant:playSounds(lastIndex)
 end
 
 function MasterMerchant:setScanning(start)
+  --MasterMerchant.dm("Verbose", "setScanning")
   self.isScanning = start
   MasterMerchantResetButton:SetEnabled(not start)
   MasterMerchantGuildResetButton:SetEnabled(not start)
@@ -235,6 +236,7 @@ function MasterMerchant:setDigging(start)
 end
 
 function MasterMerchant:setScanningParallel(start, guildName)
+  --MasterMerchant.dm("Verbose", "setScanningParallel")
   self.isScanningParallel[guildName] = start
   MasterMerchantResetButton:SetEnabled(not start)
   MasterMerchantGuildResetButton:SetEnabled(not start)
@@ -261,6 +263,7 @@ end
 -- For faster searching of large histories, we'll maintain an inverted
 -- index of search terms - here we build the indexes from the existing table
 function MasterMerchant:indexHistoryTables()
+  --MasterMerchant.dm("Verbose", "indexHistoryTables")
 
   local prefunc = function(extraData)
     if MasterMerchant:ActiveSettings().minimalIndexing then
@@ -341,16 +344,18 @@ end
 
 -- And here we add a new item
 function MasterMerchant:addToHistoryTables(theEvent, checkForDups)
+  --MasterMerchant.dm("Debug", "addToHistoryTables")
+  --MasterMerchant.dm("Debug", theEvent.id)
 
-  local theIID = string.match(theEvent.itemName, '|H.-:item:(.-):')
+  --oddly theEvent when it hits that function the itemLink was theEvent.itemName
+  local theIID = GetItemLinkItemId(theEvent.itemLink)
   if theIID == nil then return end
-  theIID = tonumber(theIID)
-  local itemIndex = self.makeIndexFromLink(theEvent.itemName)
+  local itemIndex = self.makeIndexFromLink(theEvent.itemLink)
 
   local newSalesItem =
     {buyer = theEvent.buyer,
     guild = theEvent.guild,
-    itemLink = theEvent.itemName,
+    itemLink = theEvent.itemLink,
     quant = theEvent.quant,
     timestamp = theEvent.saleTime,
     price = theEvent.salePrice,
@@ -398,7 +403,7 @@ function MasterMerchant:addToHistoryTables(theEvent, checkForDups)
       [15] = function (k) MM15Data.savedVariables.SalesData[k] = {}; return MM15Data.savedVariables.SalesData[k]  end
     }
 
-    local hash = MasterMerchant.hashString(string.lower(GetItemLinkName(theEvent.itemName)))
+    local hash = MasterMerchant.hashString(string.lower(GetItemLinkName(theEvent.itemLink)))
 
     self.salesData[theIID] = action[hash](theIID)
   end
@@ -453,8 +458,8 @@ function MasterMerchant:addToHistoryTables(theEvent, checkForDups)
     temp[2] = tolower(theEvent.buyer) or ''
     temp[4] = tolower(theEvent.seller) or ''
     temp[6] = tolower(theEvent.guild) or ''
-    temp[8] = tolower(GetItemLinkName(theEvent.itemName)) or ''
-    temp[10] = self.addedSearchToItem(theEvent.itemName) or ''
+    temp[8] = tolower(GetItemLinkName(theEvent.itemLink)) or ''
+    temp[10] = self.addedSearchToItem(theEvent.itemLink) or ''
     if isSelfSale then
       temp[12] = MasterMerchant.PlayerSpecialText
     else
@@ -522,6 +527,7 @@ end
 
 -- Create a textual representation of a time interval
 function MasterMerchant.TextTimeSince(theTime, useLowercase)
+  --MasterMerchant.dm("Verbose", "TextTimeSince")
   local secsSince = GetTimeStamp() - theTime
 
   if secsSince < 864000 then
@@ -534,11 +540,27 @@ end
 -- Grabs the first and last events in guildID's sales history and compares the secsSince
 -- values returned.  Returns true if the first event (ID 1) is newer than the last event,
 -- false otherwise.
+--[[
+this is probably not needed at all. The guild history can
+have an erroneous ammount of seconds since the event occured
+like 1657 months ago or 71582789 minutes ago. If you skip those
+you will always start with the newest event.
+]]--
 function MasterMerchant.IsNewestFirst(guildID)
+  --MasterMerchant.dm("Verbose", "IsNewestFirst")
   local numEvents = GetNumGuildEvents(guildID, GUILD_HISTORY_STORE)
-  local _, secsSinceFirst, _, _, _, _, _, _ = GetGuildEventInfo(guildID, GUILD_HISTORY_STORE, 1)
-  local _, secsSinceLast, _, _, _, _, _, _ = GetGuildEventInfo(guildID, GUILD_HISTORY_STORE, numEvents)
-  return (secsSinceFirst < secsSinceLast)
+  local secsSinceFirst
+  local secsSinceLast
+  local erroneousTimestamp = false
+  for i = 1, numEvents do
+    _, secsSinceFirst = GetGuildEventInfo(guildID, GUILD_HISTORY_STORE, i)
+    if secsSinceFirst > MasterMerchant.oneYearInSeconds then erroneousTimestamp = true end
+    if secsSinceFirst < MasterMerchant.oneYearInSeconds then break end
+  end
+  _, secsSinceLast = GetGuildEventInfo(guildID, GUILD_HISTORY_STORE, numEvents)
+  --MasterMerchant.dm("Verbose", "secsSinceFirst")
+  --MasterMerchant.dm("Verbose", "secsSinceLast")
+  return (secsSinceFirst < secsSinceLast), erroneousTimestamp
 end
 
 -- A simple utility function to return which set of settings are active,

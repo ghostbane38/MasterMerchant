@@ -22,6 +22,7 @@ local taxFactor = GetTradingHouseCutPercentage() / 200
 
 
   function MMSeller:new(_guild, _name, _outsideBuyer, _searchText)
+  --MasterMerchant.dm("Verbose", "MMSeller:new")
       o = {}   -- create object if user does not provide one
       setmetatable(o, self)
       self.__index = self
@@ -39,6 +40,7 @@ local taxFactor = GetTradingHouseCutPercentage() / 200
   end
 
   function MMSeller:addSale(rankIndex, amount, stack, sort, tax)
+  --MasterMerchant.dm("Verbose", "MMSeller:addSale")
     if sort == nil then sort = true end
 
     if not self.sales[rankIndex] then
@@ -67,6 +69,7 @@ local taxFactor = GetTradingHouseCutPercentage() / 200
   end
 
   function MMSeller:sort(rankIndex, guildRanks)
+  --MasterMerchant.dm("Verbose", "MMSeller:sort")
     while ((self.rank[rankIndex] or 0) > 1) and (guildRanks[self.rank[rankIndex] - 1]) and ((self.sales[rankIndex] or 0) > (guildRanks[self.rank[rankIndex] - 1].sales[rankIndex] or 0)) do
 
       local swapSeller = guildRanks[self.rank[rankIndex] - 1]
@@ -82,6 +85,7 @@ local taxFactor = GetTradingHouseCutPercentage() / 200
   end
 
   function MMSeller:removeSale(rankIndex, amount, stack)
+  --MasterMerchant.dm("Verbose", "MMSeller:removeSale")
     self.sales[rankIndex] = (self.sales[rankIndex] or 0) - amount
     self.tax[rankIndex] = (self.tax[rankIndex] or 0) - mfloor(amount * taxFactor)  -- Guild gets half the Cut with decimals cut off.
     self.count[rankIndex] = (self.count[rankIndex] or 0) - 1
@@ -89,6 +93,7 @@ local taxFactor = GetTradingHouseCutPercentage() / 200
   end
 
   function MMSeller:removeRankIndex(rankIndex)
+  --MasterMerchant.dm("Verbose", "MMSeller:removeRankIndex")
     if (self.sales[rankIndex]) then self.sales[rankIndex] = nil end
     if (self.tax[rankIndex]) then self.tax[rankIndex] = nil end
     if (self.count[rankIndex]) then self.count[rankIndex] = nil end
@@ -108,6 +113,7 @@ MMGuild = {
 }
 
   function MMGuild:new(_name)
+  --MasterMerchant.dm("Verbose", "MMGuild:new")
       local function guild_system_offline()
         local weekCutoff = 1595962800 -- Tuesday, 28-Jul-20 19:00:00 UTC
 
@@ -135,8 +141,19 @@ MMGuild = {
       o.kiosk_cycle = 0
       o.week_start = 0
 
+      --MasterMerchant.dm("Debug", "Current Cuttoff Aug 18")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(1597777200))
+      --MasterMerchant.dm("Debug", os.date("*t", 1597777200))
+      --MasterMerchant.dm("Debug", "Prev Cuttoff Aug 2")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(1597172400))
+      --MasterMerchant.dm("Debug", os.date("*t", 1597172400))
       -- Calc Guild Week Cutoff
       local _, weekCutoff = GetGuildKioskCycleTimes()
+      o.kiosk_cycle = weekCutoff -- future date when kiosk changes per zenimax
+      --MasterMerchant.dm("Debug", "GetGuildKioskCycleTimes")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(weekCutoff))
+      --MasterMerchant.dm("Debug", os.date("*t", weekCutoff))
+      --MasterMerchant.dm("Debug", weekCutoff)
       if weekCutoff == 0 then -- guild system is down, do something about it
         weekCutoff = guild_system_offline() -- do not subtract time because of while loop
         o.week_start = weekCutoff -- this is 7 day back already
@@ -147,20 +164,50 @@ MMGuild = {
       local dayCutoff = GetTimeStamp() - GetSecondsSinceMidnight()
 
       o.oneStart = dayCutoff -- Today
+      --MasterMerchant.dm("Debug", "oneStart")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.oneStart))
+      --MasterMerchant.dm("Debug", os.date("*t", o.oneStart))
 
       o.twoStart = o.oneStart - 86400 -- yesterday
+      --MasterMerchant.dm("Debug", "twoStart")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.twoStart))
+      --MasterMerchant.dm("Debug", os.date("*t", o.twoStart))
 
       o.threeStart = weekCutoff - MasterMerchant.days_last_kiosk(MM_INDEX_THISWEEK) -- Tuesday for the upcomming flip
+      --MasterMerchant.dm("Debug", "threeStart")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.threeStart))
+      --MasterMerchant.dm("Debug", os.date("*t", o.threeStart))
 
       o.fourStart = o.threeStart - MasterMerchant.days_last_kiosk(MM_INDEX_LASTWEEK) -- last week start
+      --MasterMerchant.dm("Debug", "fourStart")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.fourStart))
+      --MasterMerchant.dm("Debug", os.date("*t", o.fourStart))
       o.fourEnd = o.threeStart -- last week end
+      --MasterMerchant.dm("Debug", "fourEnd last week end")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.fourEnd))
+      --MasterMerchant.dm("Debug", os.date("*t", o.fourEnd))
 
       o.fiveStart = o.fourStart - MasterMerchant.days_last_kiosk(MM_INDEX_PRIORWEEK) -- prior week start
+      --MasterMerchant.dm("Debug", "fiveStart")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.fiveStart))
+      --MasterMerchant.dm("Debug", os.date("*t", o.fiveStart))
       o.fiveEnd = o.fourStart -- prior week end
+      --MasterMerchant.dm("Debug", "fiveEnd prior week end")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.fiveEnd))
+      --MasterMerchant.dm("Debug", os.date("*t", o.fiveEnd))
 
       o.sixStart = dayCutoff - 10 * 86400 -- last 10 days
+      --MasterMerchant.dm("Debug", "sixStart")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.sixStart))
+      --MasterMerchant.dm("Debug", os.date("*t", o.sixStart))
       o.sevenStart = dayCutoff - 30 * 86400 -- last 30 days
+      --MasterMerchant.dm("Debug", "sevenStart")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.sevenStart))
+      --MasterMerchant.dm("Debug", os.date("*t", o.sevenStart))
       o.eightStart = dayCutoff - 7 * 86400 -- last 7 days
+      --MasterMerchant.dm("Debug", "eightStart")
+      --MasterMerchant.dm("Debug", GetDateStringFromTimestamp(o.eightStart))
+      --MasterMerchant.dm("Debug", os.date("*t", o.eightStart))
 
       if MasterMerchant:ActiveSettings().customTimeframeType == GetString(MM_CUSTOM_TIMEFRAME_HOURS) then
         o.nineStart = GetTimeStamp() - MasterMerchant:ActiveSettings().customTimeframe * 3600 -- last x hours
@@ -190,17 +237,8 @@ MMGuild = {
   end
 
   function MMGuild:addSale(sellerName, rankIndex, amount, stack, wasKiosk, sort, searchText)
-    if not rankIndex then
-      --MasterMerchant.dm("Debug", string.format("%s %s", "rankIndex: ", rankIndex))
-    end
-    if not amount then
-      --MasterMerchant.dm("Debug", string.format("%s %s", "amount: ", amount))
-      --MasterMerchant.dm("Debug", string.format("%s %s", "type: ", type(amount)))
-    end
+  --MasterMerchant.dm("Verbose", "MMGuild:addSale")
     amount = tonumber(amount)
-    if not amount then
-      --MasterMerchant.dm("Debug", string.format("%s %s", "#amount: ", amount))
-    end
     if type(stack) ~= 'number' then stack = 1 end
 
     if not self.ranks[rankIndex] then
@@ -222,6 +260,7 @@ MMGuild = {
   end
 
   function MMGuild:removeSale(sellerName, rankIndex, amount, stack)
+  --MasterMerchant.dm("Verbose", "MMGuild:removeSale")
     if (self.sellers[sellersName]) then self.sellers[sellersName]:removeSale(rankIndex, amount, stack) end
 
     self.sales[rankIndex] = (self.sales[rankIndex] or 0) - amount
@@ -231,6 +270,7 @@ MMGuild = {
   end
 
   function MMGuild:removeRankIndex(rankIndex)
+  --MasterMerchant.dm("Verbose", "MMGuild:removeRankIndex")
     --if (self.sellers[sellersName]) then self.sellers[sellersName]:removeRankIndex(rankIndex) end
 
     if (self.sales[rankIndex]) then self.sales[rankIndex] = nil end
@@ -240,12 +280,10 @@ MMGuild = {
   end
 
   function MMGuild:addSaleByDate(sellerName, date, amount, stack, wasKiosk, sort, searchText)
+  --MasterMerchant.dm("Verbose", "MMGuild:addSaleByDate")
     if sellerName == nil then return end
     if date == nil then return end
     if type(date) ~= 'number' then return end
-    if not amount then
-      --MasterMerchant.dm("Debug", string.format("%s %s", "addSaleByDate amount: ", amount))
-    end
     if (date >= self.oneStart) then self:addSale(sellerName, 1, amount, stack, wasKiosk, sort, searchText) end;
     if (date >= self.twoStart and date < self.oneStart) then self:addSale(sellerName, 2, amount, stack, wasKiosk, sort, searchText) end;
     if (date >= self.threeStart) then self:addSale(sellerName, 3, amount, stack, wasKiosk, sort, searchText) end;
@@ -258,6 +296,7 @@ MMGuild = {
   end
 
   function MMGuild:removeSaleByDate(sellerName, date, amount, stack)
+  --MasterMerchant.dm("Verbose", "MMGuild:removeSaleByDate")
     if sellerName == nil then return end
     if (date >= self.oneStart) then self:removeSale(sellerName, 1, amount) end;
     if (date >= self.twoStart and date < self.oneStart) then self:removeSale(sellerName, 2, amount, stack) end;
@@ -271,6 +310,7 @@ MMGuild = {
   end
 
   function MMGuild:sortRankIndex(rankIndex)
+  --MasterMerchant.dm("Verbose", "MMGuild:sortRankIndex")
     MasterMerchant.shellSort(self.ranks[rankIndex] or {}, function(sortA, sortB)
       return (sortA.sales[rankIndex] or 0) > (sortB.sales[rankIndex] or 0)
     end)
