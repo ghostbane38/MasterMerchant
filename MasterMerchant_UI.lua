@@ -170,6 +170,16 @@ end
 
 function MMScrollList:SetupSalesRow(control, data)
   --MasterMerchant.dm("Verbose", "MMScrollList:SetupSalesRow")
+  --MasterMerchant.dm("Debug", data)
+  SALES_ROW_ITEM_ID = 1
+  SALES_ROW_ITEM_INDEX = 2
+  SALES_ROW_ITEM_KEY = 3 -- If there are 5 items in the table this in the n-th one
+  SALES_ROW_ITEM_TIMESTAMP = 4
+  SALES_ROW_ITEM_PRICE = 5
+  SALES_ROW_ITEM_QTY = 6
+  SALES_ROW_ITEM_DATAENTRY = 7 -- table
+  SALES_ROW_ITEM_SORTINDEX = 8 -- more like the count of items
+  MasterMerchant.lastData = data
 
   control.rowId = GetControl(control, 'RowId')
   control.buyer = GetControl(control, 'Buyer')
@@ -180,39 +190,39 @@ function MMScrollList:SetupSalesRow(control, data)
   control.sellTime = GetControl(control, 'SellTime')
   control.price = GetControl(control, 'Price')
 
-  if (MasterMerchant.salesData[data[1]] == nil) then
+  if (MasterMerchant.salesData[data[SALES_ROW_ITEM_ID]] == nil) then
     -- just starting up so just bail out
     return
   end
 
-  if (MasterMerchant.salesData[data[1]][data[2]] == nil) then
+  if (MasterMerchant.salesData[data[SALES_ROW_ITEM_ID]][data[2]] == nil) then
     --d('MM Data Error:')
-    --d(data[1])
+    --d(data[SALES_ROW_ITEM_ID])
     --d(data[2])
     --d('--------')
     return
   end
 
-  if (MasterMerchant.salesData[data[1]][data[2]]['sales'] == nil) then
+  if (MasterMerchant.salesData[data[SALES_ROW_ITEM_ID]][data[2]]['sales'] == nil) then
     --d('MM Data Error:')
-    --d(data[1])
+    --d(data[SALES_ROW_ITEM_ID])
     --d(data[2])
     --d('No Sales')
     --d('--------')
     return
   end
 
-  if (MasterMerchant.salesData[data[1]][data[2]]['sales'][data[3]] == nil) then
+  if (MasterMerchant.salesData[data[SALES_ROW_ITEM_ID]][data[2]]['sales'][data[3]] == nil) then
     --d('MM Data Error:')
-    --d(data[1])
+    --d(data[SALES_ROW_ITEM_ID])
     --d(data[2])
     --d(data[3])
     --d('--------')
     return
   end
 
-  local actualItem = MasterMerchant.salesData[data[1]][data[2]]['sales'][data[3]]
-  local actualItemIcon = MasterMerchant.salesData[data[1]][data[2]]['itemIcon']
+  local actualItem = MasterMerchant.salesData[data[SALES_ROW_ITEM_ID]][data[2]]['sales'][data[3]]
+  local actualItemIcon = MasterMerchant.salesData[data[SALES_ROW_ITEM_ID]][data[2]]['itemIcon']
   local isFullSize = string.find(control:GetName(), '^MasterMerchantWindow')
 
   local fontString = LMP:Fetch('font', MasterMerchant:ActiveSettings().windowFont) .. '|%d'
@@ -323,7 +333,7 @@ function MMScrollList:SetupGuildSalesRow(control, data)
   control.count = GetControl(control, 'Count')
   control.percent = GetControl(control, 'Percent')
 
-  if (data[1] == nil) then
+  if (data[SALES_ROW_ITEM_ID] == nil) then
     -- just starting up so just bail out
     return
   end
@@ -376,7 +386,7 @@ function MMScrollList:SetupGuildSalesRow(control, data)
   end
 
   -- Guild cell
-  if data[9] then guildString = '|t16:16:/EsoUI/Art/icons/item_generic_coinbag.dds|t ' .. data[1] else guildString = '     ' .. data[1] end
+  if data[9] then guildString = '|t16:16:/EsoUI/Art/icons/item_generic_coinbag.dds|t ' .. data[SALES_ROW_ITEM_ID] else guildString = '     ' .. data[SALES_ROW_ITEM_ID] end
   control.guild:SetWrapMode(TEXT_WRAP_MODE_ELLIPSIS)
   control.guild:SetText(guildString)
 
@@ -757,6 +767,15 @@ function MMScrollList:FilterScrollList()
         end
       end
 
+      --[[
+      k will end up being the item ID: 71567
+      j will be the itemIndex: 1:0:4:0:0
+      i will end up being the key for the item is self: 2
+
+      i is the index to the item. If there are 10 of that item ID sold
+      and the item being displayed is the 2nd one so [2] then that
+      is the data retreived.
+      ]]--
       -- Now that we have the intersection, actually build the search table
       for k, val in pairs(intersectionIndexes) do
         for j, subval in pairs(val) do
@@ -1173,7 +1192,7 @@ function MasterMerchant:remStatsItemTooltip()
  end
 
 function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
-  MasterMerchant.dm("Debug", "addStatsAndGraph")
+  --MasterMerchant.dm("Debug", "addStatsAndGraph")
 
   if not (self:ActiveSettings().showPricing or self:ActiveSettings().showGraph or self:ActiveSettings().showCraftCost) then return end
 

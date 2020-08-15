@@ -97,7 +97,7 @@ function MasterMerchant.days_last_kiosk(weekIndex)
 end
 
 function MasterMerchant:TimeCheck()
-  MasterMerchant.dm("Debug", "TimeCheck")
+  --MasterMerchant.dm("Debug", "TimeCheck")
     -- setup focus info
     local range = self:ActiveSettings().defaultDays
     if IsControlKeyDown() and IsShiftKeyDown() then
@@ -118,7 +118,7 @@ end
 
 -- Computes the weighted moving average across available data
 function MasterMerchant:toolTipStats(itemID, itemIndex, skipDots, goBack, clickable)
-  MasterMerchant.dm("Debug", "toolTipStats")
+  --MasterMerchant.dm("Debug", "toolTipStats")
   local returnData = {['avgPrice'] = nil, ['numSales'] = nil, ['numDays'] = 10000, ['numItems'] = nil, ['craftCost'] = nil}
 
   -- make sure we have a list of sales to work with
@@ -299,7 +299,7 @@ function MasterMerchant:toolTipStats(itemID, itemIndex, skipDots, goBack, clicka
 end
 
 function MasterMerchant:itemStats(itemLink, clickable)
-  MasterMerchant.dm("Debug", "itemStats")
+  --MasterMerchant.dm("Debug", "itemStats")
   local itemID = GetItemLinkItemId(itemLink)
   local itemIndex = MasterMerchant.makeIndexFromLink(itemLink)
   return MasterMerchant:toolTipStats(itemID, itemIndex, nil, nil, clickable)
@@ -313,7 +313,7 @@ function MasterMerchant:itemHasSales(itemLink)
 end
 
 function MasterMerchant:itemPriceTip(itemLink, chatText, clickable)
-  MasterMerchant.dm("Debug", "itemPriceTip")
+  --MasterMerchant.dm("Debug", "itemPriceTip")
 
   local tipStats = MasterMerchant:itemStats(itemLink, clickable)
   if tipStats.avgPrice then
@@ -348,7 +348,7 @@ function MasterMerchant:itemPriceTip(itemLink, chatText, clickable)
 end
 
 function  MasterMerchant.GetItemLinkRecipeNumIngredients(itemLink)
-  MasterMerchant.dm("Debug", "GetItemLinkRecipeNumIngredients")
+  --MasterMerchant.dm("Debug", "GetItemLinkRecipeNumIngredients")
     local numIngredients = GetItemLinkRecipeNumIngredients(itemLink)
     if numIngredients > 0 then
         return numIngredients
@@ -442,7 +442,7 @@ function  MasterMerchant.GetItemLinkRecipeIngredientInfo(itemLink, i)
 end
 
 function MasterMerchant:itemCraftPrice(itemLink)
-  MasterMerchant.dm("Debug", "itemCraftPrice")
+  --MasterMerchant.dm("Debug", "itemCraftPrice")
 
     local itemType = GetItemLinkItemType(itemLink)
 
@@ -497,7 +497,7 @@ function MasterMerchant:itemCraftPrice(itemLink)
 end
 
 function MasterMerchant:itemCraftPriceTip(itemLink, chatText)
-  MasterMerchant.dm("Debug", "itemCraftPriceTip")
+  --MasterMerchant.dm("Debug", "itemCraftPriceTip")
     local cost = self:itemCraftPrice(itemLink)
     if cost then
       craftTip = "Craft Cost: %s"
@@ -1866,7 +1866,7 @@ function MasterMerchant:CleanOutBad()
 
     saledata.itemDesc = nil
     saledata.itemAdderText = nil
-    
+
     if saledata['timestamp'] == nil
       or type(saledata['timestamp']) ~= 'number'
       or saledata['timestamp'] < 0
@@ -2690,6 +2690,8 @@ function MasterMerchant:ScanStoresParallel(doAlert)
   DoScanParallel, ProcessSomeParallel, Added X sales
 
   Cleanup: PostScanParallel, SalesStats
+
+  Also I have seen PostScanParallel followed by SwitchPrice
   ]]--
   if (timeLimit > (self.requestTimestamp or 0)) then
     -- Simple scanning
@@ -3198,9 +3200,6 @@ function MasterMerchant.AddRosterStats(rowControl, result)
     count:SetText(stringCount)
 end
 
-
-
-
 -- Handle the reset button - clear out the search and scan tables,
 -- and set the time of the last scan to nil, then force a scan.
 function MasterMerchant:DoReset()
@@ -3641,6 +3640,8 @@ function MasterMerchant:Initialize()
     MasterMerchant:ActiveSettings().minimalIndexing = false
   end
 
+--MM15DataSavedVariables["Default"]["MasterMerchant"]["$AccountWide"]["version"]
+--MM15DataSavedVariables["Default"]["MasterMerchant"]["$AccountWide"]["SalesData"]
 
   -- Move the old single addon sales history to the multi addon sales history
   if self.acctSavedVariables.SalesData then
