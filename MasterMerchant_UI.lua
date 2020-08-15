@@ -15,6 +15,7 @@ local GUILDS = 'half'
 local LISTINGS = 'listings'
 
 function MasterMerchant:SortByPrice(ordering, scrollList)
+  --MasterMerchant.dm("Verbose", "SortByPrice")
   local listData = ZO_ScrollList_GetDataList(scrollList.list)
 
   if not ordering then
@@ -51,6 +52,7 @@ end
 
 -- Sort the scrollList by time in 'ordering' order (asc = true as per ZOS).
 function MasterMerchant:SortByTime(ordering, scrollList)
+  --MasterMerchant.dm("Verbose", "SortByTime")
   local listData = ZO_ScrollList_GetDataList(scrollList.list)
 
   if not ordering then
@@ -65,6 +67,7 @@ function MasterMerchant:SortByTime(ordering, scrollList)
 end
 
 function MasterMerchant:SortBySales(ordering, scrollList)
+  --MasterMerchant.dm("Verbose", "SortBySales")
   local listData = ZO_ScrollList_GetDataList(scrollList.list)
 
   if not ordering then
@@ -79,6 +82,7 @@ function MasterMerchant:SortBySales(ordering, scrollList)
 end
 
 function MasterMerchant:SortByRank(ordering, scrollList)
+  --MasterMerchant.dm("Verbose", "SortByRank")
   local listData = ZO_ScrollList_GetDataList(scrollList.list)
 
   if not ordering then
@@ -93,6 +97,7 @@ function MasterMerchant:SortByRank(ordering, scrollList)
 end
 
 function MasterMerchant:SortByCount(ordering, scrollList)
+  --MasterMerchant.dm("Verbose", "SortByCount")
   local listData = ZO_ScrollList_GetDataList(scrollList.list)
 
   if not ordering then
@@ -107,6 +112,7 @@ function MasterMerchant:SortByCount(ordering, scrollList)
 end
 
 function MasterMerchant:SortByTax(ordering, scrollList)
+  --MasterMerchant.dm("Verbose", "SortByTax")
   local listData = ZO_ScrollList_GetDataList(scrollList.list)
 
   if not ordering then
@@ -121,6 +127,7 @@ function MasterMerchant:SortByTax(ordering, scrollList)
 end
 
 function MasterMerchant:SortByName(ordering, scrollList)
+  --MasterMerchant.dm("Verbose", "SortByName")
   local listData = ZO_ScrollList_GetDataList(scrollList.list)
   if not ordering then
     MasterMerchant.shellSort(listData, function(sortA, sortB)
@@ -134,6 +141,7 @@ function MasterMerchant:SortByName(ordering, scrollList)
 end
 
 function MasterMerchant:SortByGuildName(ordering, scrollList)
+  --MasterMerchant.dm("Verbose", "SortByGuildName")
   local listData = ZO_ScrollList_GetDataList(scrollList.list)
   if not ordering then
     MasterMerchant.shellSort(listData, function(sortA, sortB)
@@ -147,6 +155,7 @@ function MasterMerchant:SortByGuildName(ordering, scrollList)
 end
 
 function MasterMerchant:SortByItemGuildName(ordering, scrollList)
+  --MasterMerchant.dm("Verbose", "SortByItemGuildName")
   local listData = ZO_ScrollList_GetDataList(scrollList.list)
   if not ordering then
     MasterMerchant.shellSort(listData, function(sortA, sortB)
@@ -160,6 +169,7 @@ function MasterMerchant:SortByItemGuildName(ordering, scrollList)
 end
 
 function MMScrollList:SetupSalesRow(control, data)
+  --MasterMerchant.dm("Verbose", "MMScrollList:SetupSalesRow")
 
   control.rowId = GetControl(control, 'RowId')
   control.buyer = GetControl(control, 'Buyer')
@@ -301,6 +311,7 @@ end
 
 
 function MMScrollList:SetupGuildSalesRow(control, data)
+  --MasterMerchant.dm("Verbose", "MMScrollList:SetupGuildSalesRow")
 
   control.rowId = GetControl(control, 'RowId')
   control.seller = GetControl(control, 'Seller')
@@ -400,6 +411,7 @@ function MMScrollList:SetupGuildSalesRow(control, data)
 end
 
 function MMScrollList:SetupListingsRow(control, data)
+  --MasterMerchant.dm("Verbose", "MMScrollList:SetupListingsRow")
 
   control.rowId = GetControl(control, 'RowId')
   control.seller = GetControl(control, 'Seller')
@@ -514,6 +526,7 @@ function MMScrollList:SetupListingsRow(control, data)
 end
 
 function MMScrollList:ColorRow(control, data, mouseIsOver)
+  --MasterMerchant.dm("Verbose", "MMScrollList:ColorRow")
   for i = 1, control:GetNumChildren() do
     local child = control:GetChild(i)
     if not child.nonRecolorable then
@@ -526,6 +539,7 @@ function MMScrollList:ColorRow(control, data, mouseIsOver)
 end
 
 function MMScrollList:InitializeDataType(controlName)
+  --MasterMerchant.dm("Verbose", "MMScrollList:InitializeDataType")
   self.masterList = {}
   if controlName == 'MasterMerchantWindow' then
     ZO_ScrollList_AddDataType(self.list, 1, 'MasterMerchantDataRow', 36, function(control, data) self:SetupSalesRow(control, data) end)
@@ -538,6 +552,7 @@ function MMScrollList:InitializeDataType(controlName)
 end
 
 function MMScrollList:New(control)
+  --MasterMerchant.dm("Verbose", "MMScrollList:New")
   local skList = ZO_SortFilterList.New(self, control)
   skList:InitializeDataType(control:GetName())
   if control:GetName() == 'MasterMerchantWindow' then
@@ -573,6 +588,7 @@ end
 
 
 function MMScrollList:FilterScrollList()
+  --MasterMerchant.dm("Verbose", "MMScrollList:FilterScrollList")
   local settingsToUse = MasterMerchant:ActiveSettings()
   local listData = ZO_ScrollList_GetDataList(self.list)
   ZO_ClearNumericallyIndexedTable(listData)
@@ -587,8 +603,10 @@ function MMScrollList:FilterScrollList()
   if searchText then searchText = string.gsub(string.lower(searchText), '^%s*(.-)%s*$', '%1') end
 
   if settingsToUse.viewSize == ITEMS then
+    --MasterMerchant.dm("Verbose", "settingsToUse.viewSize == ITEMS")
     -- return item sales
     if MasterMerchant.viewMode ~= 'self' and (searchText == nil or searchText == '') then
+      --MasterMerchant.dm("Verbose", "MasterMerchant.viewMode ~= self")
       -- everything unfiltered (filter to the default time range)
       local timeCheck = MasterMerchant:TimeCheck()
       for k, v in pairs(MasterMerchant.salesData) do
@@ -607,8 +625,10 @@ function MMScrollList:FilterScrollList()
         end
       end
     elseif NonContiguousCount(MasterMerchant.SRIndex) == 1 and (searchText ~= nil and searchText ~= '') then
+      --MasterMerchant.dm("Verbose", "NonContiguousCount")
       -- We just have player indexed and we have something to filter with
       if MasterMerchant.viewMode == 'self' then
+        --MasterMerchant.dm("Verbose", "NonContiguousCount viewMode == self")
         -- Search all data in the last 180 days
         local timeCheck = GetTimeStamp() - (86400 * 90)
         local tconcat = table.concat
@@ -647,6 +667,7 @@ function MMScrollList:FilterScrollList()
         end
       else
         -- Search all data in the last 90 days
+        --MasterMerchant.dm("Verbose", "90 days of data")
         local timeCheck = GetTimeStamp() - (86400 * 90)
         local tconcat = table.concat
         local tinsert = table.insert
@@ -684,7 +705,9 @@ function MMScrollList:FilterScrollList()
     else
       -- We have the indexes to search
       -- Break up search term into words
+      --MasterMerchant.dm("Verbose", "Nothing applied to what is above")
       if MasterMerchant.viewMode == 'self' then
+        --MasterMerchant.dm("Verbose", "Nothing applied viewMode == self")
         searchText = MasterMerchant.concat(searchText, MasterMerchant.PlayerSpecialText)
       end
       local searchByWords = string.gmatch(searchText, '%S+')
@@ -711,9 +734,11 @@ function MMScrollList:FilterScrollList()
 
         -- If this is the first(or only) word, the intersection is itself
         if NonContiguousCount(intersectionIndexes) == 0 then
+          --MasterMerchant.dm("Verbose", "Nothing applied NonContiguousCount == 0")
           intersectionIndexes = addedIndexes
         else
           -- Compute the intersection of the two
+          --MasterMerchant.dm("Verbose", "Nothing applied compute NonContiguousCount")
           local newIntersection = {}
           for k, val in pairs(intersectionIndexes) do
             if addedIndexes[k] then
@@ -1148,6 +1173,7 @@ function MasterMerchant:remStatsItemTooltip()
  end
 
 function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
+  MasterMerchant.dm("Debug", "addStatsAndGraph")
 
   if not (self:ActiveSettings().showPricing or self:ActiveSettings().showGraph or self:ActiveSettings().showCraftCost) then return end
 
@@ -1389,7 +1415,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
 	end
   end
 
-  if MasterMerchant.v(6) then
+  if self:ActiveSettings().verbose == 6 then
     if not tooltip.mmTextDebug then
       tooltip.mmTextDebug = tooltip.textPool:AcquireObject()
       tooltip:AddControl(tooltip.mmTextDebug)
@@ -1402,6 +1428,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
     itemInfo = itemInfo .. ' - ' .. MasterMerchant.addedSearchToItem(itemLink)
     --local itemType = GetItemLinkItemType(itemLink)
     --itemInfo = '(' .. itemType .. ')' .. itemInfo
+    --MasterMerchant.dm("Debug", self:ActiveSettings().verbose)
     if itemInfo then
       tooltip.mmTextDebug:SetText(string.format('%s', itemInfo))
       tooltip.mmTextDebug:SetColor(1,1,1,1)
@@ -1428,6 +1455,7 @@ end
 
 -- |H<style>:<type>[:<data>...]|h<text>|h
 function MasterMerchant:addStatsPopupTooltip(Popup)
+  --MasterMerchant.dm("Verbose", "addStatsPopupTooltip")
 
   if Popup == ZO_ProvisionerTopLevelTooltip then
     local recipeListIndex, recipeIndex = PROVISIONER:GetSelectedRecipeListIndex(), PROVISIONER:GetSelectedRecipeIndex()
@@ -1486,6 +1514,7 @@ end
 -- who the control generating the tooltip is so we know
 -- how to grab the item data
 function MasterMerchant:addStatsItemTooltip()
+  --MasterMerchant.dm("Verbose", "addStatsItemTooltip")
   local skMoc = moc()
   -- Make sure we don't double-add stats or try to add them to nothing
   -- Since we call this on Update rather than Show it gets called a lot
@@ -1622,6 +1651,7 @@ end
 
 -- Switch Sales window to display buyer or seller
 function MasterMerchant:ToggleBuyerSeller()
+  --MasterMerchant.dm("Verbose", "ToggleBuyerSeller")
   local settingsToUse = MasterMerchant:ActiveSettings()
   if settingsToUse.viewSize == 'full' then
     if settingsToUse.viewBuyerSeller == 'buyer' then
@@ -1654,6 +1684,7 @@ end
 
 -- Update all the fields of the stats window based on the response from SalesStats()
 function MasterMerchant:UpdateStatsWindow(guildName)
+  --MasterMerchant.dm("Verbose", "UpdateStatsWindow")
   if not guildName or guildName == '' then guildName = 'SK_STATS_TOTAL' end
   local sliderLevel = MasterMerchantStatsWindowSlider:GetValue()
   self.newStats = self:SalesStats(sliderLevel)
@@ -1703,6 +1734,7 @@ end
 -- contents of the search box and the current sorting settings so they're the
 -- same on the other window when it appears.
 function MasterMerchant:ToggleViewMode()
+  --MasterMerchant.dm("Verbose", "ToggleViewMode")
   local settingsToUse = MasterMerchant:ActiveSettings()
   -- Switching to guild view
   if settingsToUse.viewSize == 'full' then
@@ -1768,6 +1800,7 @@ end
 
 -- Switch between all sales and your sales
 function MasterMerchant:SwitchViewMode()
+  --MasterMerchant.dm("Verbose", "SwitchViewMode")
   if self.viewMode == 'self' then
     MasterMerchantSwitchViewButton:SetText(GetString(SK_VIEW_YOUR_SALES))
     MasterMerchantWindowTitle:SetText(GetString(MM_APP_NAME) .. ' - ' .. GetString(SK_ALL_SALES_TITLE))
@@ -1793,6 +1826,7 @@ end
 
 -- Switch between total price mode and unit price mode
 function MasterMerchant:SwitchPriceMode()
+  --MasterMerchant.dm("Verbose", "SwitchPriceMode")
   local settingsToUse = MasterMerchant:ActiveSettings()
   if settingsToUse.showUnitPrice then
     settingsToUse.showUnitPrice = false
@@ -1812,6 +1846,7 @@ end
 
 -- Update the stats window if the slider in it moved
 function MasterMerchant.OnStatsSliderMoved(self, sliderLevel, eventReason)
+  --MasterMerchant.dm("Verbose", "OnStatsSliderMoved")
   local guildDropdown = ZO_ComboBox_ObjectFromContainer(MasterMerchantStatsGuildChooser)
   local selectedGuild = guildDropdown:GetSelectedItem()
   if selectedGuild == GetString(SK_STATS_ALL_GUILDS) then selectedGuild = 'SK_STATS_TOTAL' end
@@ -1821,6 +1856,7 @@ end
 -- Set up the labels and tooltips from translation files and do a couple other UI
 -- setup routines
 function MasterMerchant:SetupMasterMerchantWindow()
+  --MasterMerchant.dm("Verbose", "MasterMerchant:SetupMasterMerchantWindow")
   local settingsToUse = self:ActiveSettings()
   -- MasterMerchant button in guild store screen
   local reopenMasterMerchant = CreateControlFromVirtual('MasterMerchantReopenButton', ZO_TradingHouseBrowseItemsLeftPane, 'ZO_DefaultButton')
@@ -2037,6 +2073,7 @@ function MasterMerchant:SetupMasterMerchantWindow()
 end
 
 function MasterMerchant:SetupScrollLists()
+  --MasterMerchant.dm("Verbose", "SetupScrollLists")
     -- Scroll list init
   self.scrollList = MMScrollList:New(MasterMerchantWindow)
   --self.scrollList:Initialize()

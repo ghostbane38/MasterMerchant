@@ -9,7 +9,7 @@
 
 function MasterMerchant.v(level, ...)
   -- DEBUG
-  if (level <= MasterMerchant:ActiveSettings().verbose) then
+  if (level <= MasterMerchant.verboseLevel) then
     if ... and MasterMerchant.viewer then
       MasterMerchant.dm("Debug", ...)
     else
@@ -207,6 +207,7 @@ function MasterMerchant:playSounds(lastIndex)
 end
 
 function MasterMerchant:setScanning(start)
+  --MasterMerchant.dm("Verbose", "setScanning")
   self.isScanning = start
   MasterMerchantResetButton:SetEnabled(not start)
   MasterMerchantGuildResetButton:SetEnabled(not start)
@@ -235,6 +236,7 @@ function MasterMerchant:setDigging(start)
 end
 
 function MasterMerchant:setScanningParallel(start, guildName)
+  --MasterMerchant.dm("Verbose", "setScanningParallel")
   self.isScanningParallel[guildName] = start
   MasterMerchantResetButton:SetEnabled(not start)
   MasterMerchantGuildResetButton:SetEnabled(not start)
@@ -261,6 +263,7 @@ end
 -- For faster searching of large histories, we'll maintain an inverted
 -- index of search terms - here we build the indexes from the existing table
 function MasterMerchant:indexHistoryTables()
+  --MasterMerchant.dm("Verbose", "indexHistoryTables")
 
   local prefunc = function(extraData)
     if MasterMerchant:ActiveSettings().minimalIndexing then
@@ -339,26 +342,87 @@ function MasterMerchant:indexHistoryTables()
 
 end
 
+function MasterMerchant:getSalesData(hash, id)
+    local dataTable = _G[string.format("MM%02dData", hash)]
+    local savedVars = dataTable.savedVariables
+    local salesData = savedVars.SalesData
+    salesData[id] = {}
+    return salesData[id]
+end
+
+--[[
+returns false if it was nil and therefore had to be set.
+If it is not nil then it may contain data.
+]]--
+function MasterMerchant:allocatedSalesData(hash, id)
+    local dataTable = _G[string.format("MM%02dData", hash)]
+    local savedVars = dataTable.savedVariables
+    local salesData = savedVars.SalesData
+    if salesData[id] == nil then
+      salesData[id] = {}
+      return false
+    end
+    return true
+end
+
+function MasterMerchant:allocatedItemIndex(hash, id, itemIndex)
+    local dataTable = _G[string.format("MM%02dData", hash)]
+    local savedVars = dataTable.savedVariables
+    local salesData = savedVars.SalesData
+    if salesData[id] == nil then
+      salesData[id] = {}
+    end
+    if salesData[id][itemIndex] == nil then
+      salesData[id][itemIndex] = {}
+      return false
+    end
+    return true
+end
+
+function MasterMerchant:allocateSalesTable(hash, id, itemIndex)
+    local dataTable = _G[string.format("MM%02dData", hash)]
+    local savedVars = dataTable.savedVariables
+    local salesData = savedVars.SalesData
+    if salesData[id] == nil then
+      salesData[id] = {}
+    end
+    if salesData[id][itemIndex] == nil then
+      salesData[id][itemIndex] = {}
+    end
+    if salesData[id][itemIndex]['sales'] == nil then
+      salesData[id][itemIndex]['sales'] = {}
+      return false
+    end
+end
+
 -- And here we add a new item
 function MasterMerchant:addToHistoryTables(theEvent, checkForDups)
+  --MasterMerchant.dm("Debug", "addToHistoryTables")
 
-  local theIID = string.match(theEvent.itemName, '|H.-:item:(.-):')
+  --oddly theEvent when it hits that function the itemLink was theEvent.itemName
+  local theIID = GetItemLinkItemId(theEvent.itemLink)
   if theIID == nil then return end
-  theIID = tonumber(theIID)
-  local itemIndex = self.makeIndexFromLink(theEvent.itemName)
+  local itemIndex = self.makeIndexFromLink(theEvent.itemLink)
+  local hash = MasterMerchant.hashString(string.lower(GetItemLinkName(theEvent.itemLink)))
 
   local newSalesItem =
     {buyer = theEvent.buyer,
     guild = theEvent.guild,
-    itemLink = theEvent.itemName,
+    itemLink = theEvent.itemLink,
     quant = theEvent.quant,
-    timestamp = theEvent.saleTime,
-    price = theEvent.salePrice,
+    timestamp = theEvent.timestamp,
+    price = theEvent.price,
     seller = theEvent.seller,
-    wasKiosk = theEvent.kioskSale,
+    wasKiosk = theEvent.wasKiosk,
     id = theEvent.id}
+    
+  local itemIdIsAlocated = MasterMerchant:allocatedSalesData(hash, theIID)
 
-  if (checkForDups and self.salesData[theIID] and self.salesData[theIID][itemIndex]) then
+  if itemIdIsAlocated then
+    self.salesData[theIID] = MasterMerchant:getSalesData(hash, theIID)
+  end
+
+  if (checkForDups and itemIdIsAlocated and self.salesData[theIID][itemIndex]) then
     for k, v in pairs(self.salesData[theIID][itemIndex]['sales']) do
       if v.id == newSalesItem.id then
         return false
@@ -376,45 +440,25 @@ function MasterMerchant:addToHistoryTables(theEvent, checkForDups)
       end
     end
   end
-
-  if not self.salesData[theIID] then
-    -- Add to the split memory set
-    local action = {
-      [0] = function (k) MM00Data.savedVariables.SalesData[k] = {}; return MM00Data.savedVariables.SalesData[k] end,
-      [1] = function (k) MM01Data.savedVariables.SalesData[k] = {}; return MM01Data.savedVariables.SalesData[k]  end,
-      [2] = function (k) MM02Data.savedVariables.SalesData[k] = {}; return MM02Data.savedVariables.SalesData[k]  end,
-      [3] = function (k) MM03Data.savedVariables.SalesData[k] = {}; return MM03Data.savedVariables.SalesData[k]  end,
-      [4] = function (k) MM04Data.savedVariables.SalesData[k] = {}; return MM04Data.savedVariables.SalesData[k]  end,
-      [5] = function (k) MM05Data.savedVariables.SalesData[k] = {}; return MM05Data.savedVariables.SalesData[k]  end,
-      [6] = function (k) MM06Data.savedVariables.SalesData[k] = {}; return MM06Data.savedVariables.SalesData[k]  end,
-      [7] = function (k) MM07Data.savedVariables.SalesData[k] = {}; return MM07Data.savedVariables.SalesData[k]  end,
-      [8] = function (k) MM08Data.savedVariables.SalesData[k] = {}; return MM08Data.savedVariables.SalesData[k]  end,
-      [9] = function (k) MM09Data.savedVariables.SalesData[k] = {}; return MM09Data.savedVariables.SalesData[k]  end,
-      [10] = function (k) MM10Data.savedVariables.SalesData[k] = {}; return MM10Data.savedVariables.SalesData[k]  end,
-      [11] = function (k) MM11Data.savedVariables.SalesData[k] = {}; return MM11Data.savedVariables.SalesData[k]  end,
-      [12] = function (k) MM12Data.savedVariables.SalesData[k] = {}; return MM12Data.savedVariables.SalesData[k]  end,
-      [13] = function (k) MM13Data.savedVariables.SalesData[k] = {}; return MM13Data.savedVariables.SalesData[k]  end,
-      [14] = function (k) MM14Data.savedVariables.SalesData[k] = {}; return MM14Data.savedVariables.SalesData[k]  end,
-      [15] = function (k) MM15Data.savedVariables.SalesData[k] = {}; return MM15Data.savedVariables.SalesData[k]  end
-    }
-
-    local hash = MasterMerchant.hashString(string.lower(GetItemLinkName(theEvent.itemName)))
-
-    self.salesData[theIID] = action[hash](theIID)
-  end
+  --MasterMerchant.dm("Debug", "Was not a duplicate")
 
   local insertedIndex = 1
+  
+  itemIndexIsAllocated = MasterMerchant:allocatedItemIndex(hash, theIID, itemIndex)
 
-  if self.salesData[theIID][itemIndex] then
+  if itemIndexIsAllocated then
     table.insert(self.salesData[theIID][itemIndex]['sales'], newSalesItem)
     insertedIndex = #self.salesData[theIID][itemIndex]['sales']
   else
+    MasterMerchant:allocateSalesTable(hash, theIID, itemIndex)
+    self.salesData[theIID] = MasterMerchant:getSalesData(hash, theIID)
     self.salesData[theIID][itemIndex] = {
       itemIcon = GetItemLinkInfo(newSalesItem.itemLink),
       itemAdderText = self.addedSearchToItem(newSalesItem.itemLink),
       itemDesc = GetItemLinkName(newSalesItem.itemLink),
       sales = {newSalesItem}}
   end
+  --MasterMerchant.dm("Debug", "Past itemIndexIsAllocated")
 
   local guild = MasterMerchant.guildSales[newSalesItem.guild] or MMGuild:new(newSalesItem.guild)
   MasterMerchant.guildSales[newSalesItem.guild] = guild;
@@ -453,8 +497,8 @@ function MasterMerchant:addToHistoryTables(theEvent, checkForDups)
     temp[2] = tolower(theEvent.buyer) or ''
     temp[4] = tolower(theEvent.seller) or ''
     temp[6] = tolower(theEvent.guild) or ''
-    temp[8] = tolower(GetItemLinkName(theEvent.itemName)) or ''
-    temp[10] = self.addedSearchToItem(theEvent.itemName) or ''
+    temp[8] = tolower(GetItemLinkName(theEvent.itemLink)) or ''
+    temp[10] = self.addedSearchToItem(theEvent.itemLink) or ''
     if isSelfSale then
       temp[12] = MasterMerchant.PlayerSpecialText
     else
@@ -522,6 +566,7 @@ end
 
 -- Create a textual representation of a time interval
 function MasterMerchant.TextTimeSince(theTime, useLowercase)
+  --MasterMerchant.dm("Verbose", "TextTimeSince")
   local secsSince = GetTimeStamp() - theTime
 
   if secsSince < 864000 then
@@ -535,6 +580,7 @@ end
 -- values returned.  Returns true if the first event (ID 1) is newer than the last event,
 -- false otherwise.
 function MasterMerchant.IsNewestFirst(guildID)
+  --MasterMerchant.dm("Verbose", "IsNewestFirst")
   local numEvents = GetNumGuildEvents(guildID, GUILD_HISTORY_STORE)
   local _, secsSinceFirst, _, _, _, _, _, _ = GetGuildEventInfo(guildID, GUILD_HISTORY_STORE, 1)
   local _, secsSinceLast, _, _, _, _, _, _ = GetGuildEventInfo(guildID, GUILD_HISTORY_STORE, numEvents)
