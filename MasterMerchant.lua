@@ -297,13 +297,13 @@ function MasterMerchant:toolTipStats(itemID, itemIndex, skipDots, goBack, clicka
 end
 
 function MasterMerchant:itemStats(itemLink, clickable)
-  local itemID = tonumber(string.match(itemLink, '|H.-:item:(.-):'))
+  local itemID = GetItemLinkItemId(itemLink)
   local itemIndex = MasterMerchant.makeIndexFromLink(itemLink)
   return MasterMerchant:toolTipStats(itemID, itemIndex, nil, nil, clickable)
 end
 
 function MasterMerchant:itemHasSales(itemLink)
-  local itemID = tonumber(string.match(itemLink, '|H.-:item:(.-):'))
+  local itemID = GetItemLinkItemId(itemLink)
   local itemIndex = MasterMerchant.makeIndexFromLink(itemLink)
   return self.salesData[itemID] and self.salesData[itemID][itemIndex] and self.salesData[itemID][itemIndex]['sales'] and #self.salesData[itemID][itemIndex]['sales'] > 0
 end
@@ -824,12 +824,12 @@ function MasterMerchant.PostPendingItem(self)
     local _, stackCount, _ = GetItemInfo(BAG_BACKPACK, self.pendingItemSlot)
     local settingsToUse = MasterMerchant:ActiveSettings()
 
-    local theIID = string.match(itemLink, '|H.-:item:(.-):')
+    local theIID = GetItemLinkItemId(itemLink)
     local itemIndex = MasterMerchant.makeIndexFromLink(itemLink)
 
     settingsToUse.pricingData = settingsToUse.pricingData or {}
-    settingsToUse.pricingData[tonumber(theIID)] = settingsToUse.pricingData[tonumber(theIID)] or {}
-    settingsToUse.pricingData[tonumber(theIID)][itemIndex] = self.invoiceSellPrice.sellPrice / stackCount
+    settingsToUse.pricingData[theIID] = settingsToUse.pricingData[theIID] or {}
+    settingsToUse.pricingData[theIID][itemIndex] = self.invoiceSellPrice.sellPrice / stackCount
 
     if settingsToUse.displayListingMessage then
       local selectedGuildId = GetSelectedTradingHouseGuildId()
@@ -2595,45 +2595,39 @@ function MasterMerchant:ScanStoresParallel(doAlert)
   local timeLimit = GetTimeStamp() - 15
   if (timeLimit > (self.requestTimestamp or 0)) then
     -- Simple scanning
-    if self:ActiveSettings().simpleSalesScanning then
-      MasterMerchant.v(4, 'Retrieving Sales (simple)...')
-      for i = 1, guildNum do
-        local guildID = GetGuildId(i)
-        local guildName = GetGuildName(guildID)
-        self.numEvents[guildName] = (self.numEvents[guildName] or 0)
-        zo_callLater(function() self:RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE) end, 500 + (5000 * (i-1)))
-      end
-    else
-      MasterMerchant.v(4, 'Retrieving Sales (robust)...')
-      self.requestTimestamp = GetTimeStamp()
-      self.addedEvents = self.addedEvents or {}
+    MasterMerchant.v(4, 'Retrieving Sales...')
+    self.requestTimestamp = GetTimeStamp()
+    self.addedEvents = self.addedEvents or {}
 
-      -- Scan 3 days back to start on a guild
-      local newGuildTime = GetTimeStamp() - (24 * 3 * 3600)
+    -- Scan 3 days back to start on a guild
+    local newGuildTime = GetTimeStamp() - (24 * 3 * 3600)
 
-      for i = 1, guildNum do
-        local guildID = GetGuildId(i)
-        local guildName = GetGuildName(guildID)
-        if self.isScanningParallel[guildName] then
-          MasterMerchant.v(5, 'Still Scanning ' .. guildID .. ' (' .. guildName .. ')')
-        else
-          MasterMerchant.v(5, 'Starting to Scan ' .. guildID .. ' (' .. guildName .. ')')
-          self.addedEvents[guildName] = 0
-          self.alertQueue[guildName] = {}
-          self.lastUpdateTime[guildName] = 0
-          self.lastUpdateCount[guildName] = 0
-          self.systemSavedVariables.newestItem[guildName] = self.systemSavedVariables.newestItem[guildName] or newGuildTime
-          self.systemSavedVariables.lastScan[guildName] = self.systemSavedVariables.lastScan[guildName] or newGuildTime
-          self:setScanningParallel(true, guildName)
-          if not MasterMerchant:RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE) then
-            MasterMerchant.v(7, 'In RequestMoreGuildHistoryCategoryEvents Cooldown.')
-          end
-          zo_callLater(function() self:ScanOlderParallel(guildID, doAlert, nil, nil) end, 500 + (5000 * (i-1)))
+    for i = 1, guildNum do
+      local guildID = GetGuildId(i)
+      local guildName = GetGuildName(guildID)
+      local numEvents = GetNumGuildEvents(guildID, GUILD_HISTORY_STORE)
+      if numEvents == 0 then
+        MasterMerchant.v(3, 'There are no sales events in the guild history for ' .. guildID .. ' (' .. guildName .. ')')
+      elseif numEvents < 100 then
+        MasterMerchant.v(3, 'Less then 100 events for ' .. guildID .. ' (' .. guildName .. ') wait for more events.')
+      elseif self.isScanningParallel[guildName] then
+        MasterMerchant.v(5, 'Still Scanning ' .. guildID .. ' (' .. guildName .. ')')
+      else
+        MasterMerchant.v(5, 'Starting to Scan ' .. guildID .. ' (' .. guildName .. ')')
+        self.addedEvents[guildName] = 0
+        self.alertQueue[guildName] = {}
+        self.lastUpdateTime[guildName] = 0
+        self.lastUpdateCount[guildName] = 0
+        self.systemSavedVariables.newestItem[guildName] = self.systemSavedVariables.newestItem[guildName] or newGuildTime
+        self.systemSavedVariables.lastScan[guildName] = self.systemSavedVariables.lastScan[guildName] or newGuildTime
+        self:setScanningParallel(true, guildName)
+        if not MasterMerchant:RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE) then
+          MasterMerchant.v(7, 'In RequestMoreGuildHistoryCategoryEvents Cooldown.')
         end
+        zo_callLater(function() self:ScanOlderParallel(guildID, doAlert, nil, nil) end, 500 + (5000 * (i-1)))
       end
     end
   end
-
 end
 
 
@@ -3262,11 +3256,11 @@ function MasterMerchant.SetupPendingPost(self)
 
     local settingsToUse = MasterMerchant:ActiveSettings()
 
-    local theIID = string.match(itemLink, '|H.-:item:(.-):')
+    local theIID = GetItemLinkItemId(itemLink)
     local itemIndex = MasterMerchant.makeIndexFromLink(itemLink)
 
-    if settingsToUse.pricingData and settingsToUse.pricingData[tonumber(theIID)] and settingsToUse.pricingData[tonumber(theIID)][itemIndex] then
-			self:SetPendingPostPrice(math.floor(settingsToUse.pricingData[tonumber(theIID)][itemIndex] * stackCount))
+    if settingsToUse.pricingData and settingsToUse.pricingData[theIID] and settingsToUse.pricingData[theIID][itemIndex] then
+			self:SetPendingPostPrice(math.floor(settingsToUse.pricingData[theIID][itemIndex] * stackCount))
 		else
       local tipStats = MasterMerchant:itemStats(itemLink)
       if (tipStats.avgPrice) then
@@ -3398,8 +3392,7 @@ function MasterMerchant:Initialize()
   if self.acctSavedVariables.scanHistory then
     for i = 1, #self.acctSavedVariables.scanHistory do
       local v = self.acctSavedVariables.scanHistory[i]
-      local theIID = string.match(v[3], '|H.-:item:(.-):')
-      theIID = tonumber(theIID)
+      local theIID = GetItemLinkItemId(v[3])
       local itemIndex = self.makeIndexFromLink(v[3])
       if not self.acctSavedVariables.SalesData[theIID] then self.acctSavedVariables.SalesData[theIID] = {} end
       if MasterMerchant.acctSavedVariables.SalesData[theIID][itemIndex] then
@@ -3695,9 +3688,9 @@ function MasterMerchant:Initialize()
   EVENT_MANAGER:RegisterForEvent(self.name, EVENT_TRADING_HOUSE_PENDING_ITEM_UPDATE, function (eventCode, slotId, isPending)
     if settingsToUse.showCalc and isPending and GetSlotStackSize(1, slotId) > 1 then
       local theLink = GetItemLink(1, slotId, LINK_STYLE_DEFAULT)
-      local theIID = string.match(theLink, '|H.-:item:(.-):')
+      local theIID = GetItemLinkItemId(itemLink)
       local theIData = self.makeIndexFromLink(theLink)
-      local postedStats = self:toolTipStats(tonumber(theIID), theIData)
+      local postedStats = self:toolTipStats(theIID, theIData)
       MasterMerchantPriceCalculatorStack:SetText(GetString(MM_APP_TEXT_TIMES) .. GetSlotStackSize(1, slotId))
       local floorPrice = 0
       if postedStats.avgPrice then floorPrice = string.format('%.2f', postedStats['avgPrice']) end
@@ -3857,9 +3850,9 @@ function MasterMerchant:SwitchPrice(control, slot)
 	  local itemLink = bagId and GetItemLink(bagId, slotIndex) or GetItemLink(slotIndex)
 
     if itemLink then
-      local theIID = string.match(itemLink, '|H.-:item:(.-):')
+      local theIID = GetItemLinkItemId(itemLink)
       local itemIndex = MasterMerchant.makeIndexFromLink(itemLink)
-      local tipStats = MasterMerchant:toolTipStats(tonumber(theIID), itemIndex, true, true)
+      local tipStats = MasterMerchant:toolTipStats(theIID, itemIndex, true, true)
       if tipStats.avgPrice then
           --[[
           if control.dataEntry.data.rawName == "Fortified Nirncrux" then

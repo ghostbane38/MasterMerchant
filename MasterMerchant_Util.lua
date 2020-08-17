@@ -107,9 +107,9 @@ end
 
 function MasterMerchant.GetItemLinePrice(itemLink)
     if itemLink then
-	    local theIID = string.match(itemLink, '|H.-:item:(.-):')
+	    local theIID = GetItemLinkItemId(itemLink)
 	    local itemIndex = MasterMerchant.makeIndexFromLink(itemLink)
-	    local tipStats = MasterMerchant:toolTipStats(tonumber(theIID), itemIndex, true, true, false)
+	    local tipStats = MasterMerchant:toolTipStats(theIID, itemIndex, true, true, false)
 	    if tipStats.avgPrice then
 		    return tipStats.avgPrice
         end
@@ -329,9 +329,8 @@ end
 -- And here we add a new item
 function MasterMerchant:addToHistoryTables(theEvent, checkForDups)
 
-  local theIID = string.match(theEvent.itemName, '|H.-:item:(.-):')
+  local theIID = GetItemLinkItemId(theEvent.itemName)
   if theIID == nil then return end
-  theIID = tonumber(theIID)
   local itemIndex = self.makeIndexFromLink(theEvent.itemName)
 
   local newSalesItem =
