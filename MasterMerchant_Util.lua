@@ -9,7 +9,7 @@
 
 function MasterMerchant.v(level, ...)
   -- DEBUG
-  if (level <= MasterMerchant:ActiveSettings().verbose) then
+  if (level <= MasterMerchant.verboseLevel) then
     if ... and MasterMerchant.viewer then
       MasterMerchant.dm("Debug", ...)
     else
@@ -319,6 +319,8 @@ function MasterMerchant:indexHistoryTables()
     MasterMerchant.v(4, '  ' .. extraData.indexCount .. ' sales records')
     MasterMerchant.v(4, '  ' .. extraData.wordsIndexCount .. ' words')
   end
+
+  MasterMerchant.addonIndexed = true
 
   if not self.isScanning then
     self:iterateOverSalesData(nil, nil, nil, prefunc, loopfunc, postfunc, {} )

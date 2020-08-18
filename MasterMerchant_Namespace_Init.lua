@@ -32,6 +32,12 @@ MasterMerchant.viewMode = 'self'
 MasterMerchant.isScanning = false
 MasterMerchant.isScanningParallel = { }
 MasterMerchant.salesData = { }
+MasterMerchant.eventsCache = { }
+MasterMerchant.eventsSinceCache = { }
+MasterMerchant.lastHistoryRequest = { }
+MasterMerchant.verboseLevel = 6
+MasterMerchant.addonIndexed = false
+
 
 if LibDebugLogger then
   local logger = LibDebugLogger.Create(MasterMerchant.name)

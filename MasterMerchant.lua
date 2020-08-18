@@ -1445,6 +1445,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value)
                   self:ActiveSettings().verbose = value
                   self.savedVariables.verbose = value
+                  MasterMerchant.verboseLevel = value
                 end,
     },
     -- Use simplified guild history scanning
@@ -2286,15 +2287,22 @@ function MasterMerchant:InsertEventParallel(theEvent, doAlert, checkForDups)
 end
 
 function MasterMerchant:ProcessGuildHistoryResponse(eventCode, guildID, category)
-
   if category ~= GUILD_HISTORY_STORE then return end
+  if not MasterMerchant.addonIndexed then return end
+  if self.isScanning then return end
+  if IsGameCameraUIModeActive() then return end
 
   local checkTime = GetGameTimeMilliseconds()
   local guildName = GetGuildName(guildID)
+  if self.isScanningParallel[guildName] then return end
   local numEvents = GetNumGuildEvents(guildID, GUILD_HISTORY_STORE)
+  local thePlayer = string.lower(GetDisplayName())
   local eventsAdded = 0
+  local erroneousEvent = false
+  --MasterMerchant.dm("Debug", "ProcessGuildHistoryResponse: " .. guildName)
 
-  MasterMerchant.v(6, 'ProcessGuildHistoryResponse: ' .. guildName .. '(' .. numEvents .. ')')
+  --MasterMerchant.v(6, 'Process (' .. numEvents .. ') New Guild History Events for: ' .. guildName)
+  MasterMerchant.v(6, 'Process New Guild History Events for: ' .. guildName)
 
   local guildMemberInfo = {}
   -- Index the table with the account names themselves as they're
@@ -2305,22 +2313,35 @@ function MasterMerchant:ProcessGuildHistoryResponse(eventCode, guildID, category
     guildMemberInfo[string.lower(guildMemInfo)] = true
   end
 
-  for i = (self.numEvents[guildName] or 0) + 1, numEvents do
+  -- for i = (self.numEvents[guildName] or 0) + 1, numEvents do
+  for i = 1, numEvents do
     local theEvent = {}
     theEvent.eventType, theEvent.secsSince, theEvent.seller, theEvent.buyer,
     theEvent.quant, theEvent.itemName, theEvent.salePrice = GetGuildEventInfo(guildID, GUILD_HISTORY_STORE, i)
     theEvent.guild = guildName
     theEvent.saleTime = GetTimeStamp() - theEvent.secsSince
 
+    if theEvent.secsSince > MasterMerchant.oneYearInSeconds then
+      erroneousEvent = true
+      break
+    end
+
     if theEvent.eventType == GUILD_EVENT_ITEM_SOLD then
 
       theEvent.kioskSale = (guildMemberInfo[string.lower(theEvent.buyer)] == nil)
       theEvent.id = Id64ToString(GetGuildEventId(guildID, GUILD_HISTORY_STORE, i))
 
-      if theEvent.secsSince < MasterMerchant.oneYearInSeconds and theEvent.itemName ~= nil and theEvent.seller ~= nil and theEvent.buyer ~= nil and theEvent.salePrice ~= nil then
+      if theEvent.itemName ~= nil and theEvent.seller ~= nil and theEvent.buyer ~= nil and theEvent.salePrice ~= nil then
         -- Insert the entry into the SalesData table and associated indexes
         -- Don't trust ZOS at all, always check for Dups, except for the very first scan to save some time
         local added = MasterMerchant:addToHistoryTables(theEvent, not self.veryFirstScan)
+        -- (doAlert and (self.savedVariables.showChatAlerts or self.savedVariables.showAnnounceAlerts))
+        if added and not self.veryFirstScan and string.lower(theEvent.seller) == thePlayer then
+          --MasterMerchant.dm("Debug", "alertQueue updated")
+          table.insert(self.alertQueue[theEvent.guild], theEvent)
+        else
+          --MasterMerchant.dm("Debug", "dangit false")
+        end
         if added then
           eventsAdded = eventsAdded + 1
         end
@@ -2332,11 +2353,16 @@ function MasterMerchant:ProcessGuildHistoryResponse(eventCode, guildID, category
     end
   end
 
+  --MasterMerchant.dm("Debug", "eventsAdded: " .. eventsAdded)
   if eventsAdded > 0 then
     local msgLevel = 3
     if eventsAdded < 10 then
       msgLevel = 4
     end
+    --[[Completed Scanning:ProcessGuildHistoryResponse
+    This happesn last after all the DoScanParallel, ProcessSomeParallel
+    operations are completed.
+    ]]--
     MasterMerchant.v(msgLevel, 'Added ' .. eventsAdded .. ' sales records from ' .. guildName .. '.')
     -- refresh grids
     local settingsToUse = MasterMerchant:ActiveSettings()
@@ -2368,15 +2394,27 @@ function MasterMerchant:ProcessGuildHistoryResponse(eventCode, guildID, category
   else
     MasterMerchant.v(5, 'Completed Scanning ' .. guildName .. ' but found no new sales.')
   end
-  self.numEvents[guildName] = numEvents
 
-  -- Queue up another scan in 30 seconds if there maybe some more left
-  if DoesGuildHistoryCategoryHaveMoreEvents(guildID, GUILD_HISTORY_STORE) then
-    zo_callLater(function() self:RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE) end, 30000)
+  if erroneousEvent then
+    MasterMerchant.v(3, 'Erroneous timestamp for a sales Event detected for ' .. guildName .. '. Guild history will be processed next update.')
+  else
+    self.numEvents[guildName] = numEvents
+    --[[
+    Queue up another scan in 60 seconds if there maybe some more left.
+    One minute because the server will sometimes transmit events very
+    quickly and without tracking the last request we would spam
+    the server.
+    ]]--
+    if DoesGuildHistoryCategoryHaveMoreEvents(guildID, GUILD_HISTORY_STORE) then
+      if GetDiffBetweenTimeStamps(GetTimeStamp(), MasterMerchant.lastHistoryRequest[guildID]) > 60000 then
+        MasterMerchant.lastHistoryRequest[guildID] = GetTimeStamp()
+        zo_callLater(function() RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE) end, 60000)
+      end
+    end
   end
 
 end
-
+EVENT_MANAGER:RegisterForEvent(MasterMerchant.name, EVENT_GUILD_HISTORY_RESPONSE_RECEIVED, function(...) MasterMerchant:ProcessGuildHistoryResponse(...) end)
 
 function MasterMerchant:ProcessSomeParallel(guildID, doAlert, lastSaleTime, startIndex, endIndex, loopIncrement)
 
@@ -3500,8 +3538,10 @@ function MasterMerchant:Initialize()
   if (type(MasterMerchant:ActiveSettings().verbose) == 'boolean') then
     if MasterMerchant:ActiveSettings().verbose then
       MasterMerchant:ActiveSettings().verbose = 4
+      MasterMerchant.verboseLevel = 4
     else
       MasterMerchant:ActiveSettings().verbose = 2
+      MasterMerchant.verboseLevel = 2
     end
   end
 
@@ -4087,6 +4127,13 @@ function MasterMerchant:InitScrollLists()
 
     self:SetupScrollLists()
 
+    local numGuilds = GetNumGuilds()
+    for i = 1, numGuilds do
+      local guildID = GetGuildId(i)
+      MasterMerchant.lastHistoryRequest[guildID] = GetTimeStamp()
+      if MasterMerchant.eventsSinceCache[guildID] == nil then MasterMerchant.eventsSinceCache[guildID] = {} end
+    end
+
     MasterMerchant.v(2, '|cFFFF00Master Merchant Initialized -- Holding information on ' .. self.totalRecords .. ' sales.|r')
 
     if self:ActiveSettings().simpleSalesScanning then
@@ -4222,6 +4269,8 @@ local function OnAddOnLoaded(eventCode, addOnName)
 
    --this game font is missing in all versions of LMP
    LMP:Register('font', 'Futura Condensed Bold',  'EsoUI/Common/Fonts/FuturaStd-CondensedBold.otf')
+
+   MasterMerchant.addonIndexed = true
 end
 
 
