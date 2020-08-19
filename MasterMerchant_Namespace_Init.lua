@@ -37,7 +37,9 @@ MasterMerchant.eventsSinceCache = { }
 MasterMerchant.lastHistoryRequest = { }
 MasterMerchant.verboseLevel = 6
 MasterMerchant.addonIndexed = false
-
+MasterMerchant.lastHeadEvent = { }
+MasterMerchant.lastTailEvent = { }
+MasterMerchant.lastInputVar = { } -- debug var
 
 if LibDebugLogger then
   local logger = LibDebugLogger.Create(MasterMerchant.name)

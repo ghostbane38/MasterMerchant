@@ -1850,7 +1850,7 @@ function MasterMerchant:CleanOutBad()
         extraData.deleteCount = extraData.deleteCount + 1
         return
     end
-    local newid = tonumber(string.match(saledata['itemLink'], '|H.-:item:(.-):'))
+    local newid = GetItemLinkItemId(saledata['itemLink'])
     local newversion = MasterMerchant.makeIndexFromLink(saledata['itemLink'])
     if ((newid ~= itemid) or (newversion ~= versionid)) then
       -- Move this records by inserting it another list and keep a count
@@ -2287,22 +2287,48 @@ function MasterMerchant:InsertEventParallel(theEvent, doAlert, checkForDups)
 end
 
 function MasterMerchant:ProcessGuildHistoryResponse(eventCode, guildID, category)
-  if category ~= GUILD_HISTORY_STORE then return end
-  if not MasterMerchant.addonIndexed then return end
-  if self.isScanning then return end
-  if IsGameCameraUIModeActive() then return end
+  if category ~= GUILD_HISTORY_STORE then
+    MasterMerchant.v(6, 'Process New Guild History: GUILD_HISTORY_STORE : return')
+    return
+  else
+    MasterMerchant.v(6, 'Process New Guild History: GUILD_HISTORY_STORE : pas')
+  end
+  if not MasterMerchant.addonIndexed then
+    MasterMerchant.v(6, 'Process New Guild History: MasterMerchant.addonIndexed : return')
+    return
+  else
+    MasterMerchant.v(6, 'Process New Guild History: MasterMerchant.addonIndexed : pas')
+  end
+  if self.isScanning then
+    MasterMerchant.v(6, 'Process New Guild History: self.isScanning : return')
+    return
+  else
+    MasterMerchant.v(6, 'Process New Guild History: self.isScanning : pas')
+  end
+  if IsGameCameraUIModeActive() and not MasterMerchant.addonIndexed then
+    MasterMerchant.v(6, 'Process New Guild History: IsGameCameraUIModeActive addonIndexed: return')
+    return
+  else
+    MasterMerchant.v(6, 'Process New Guild History: IsGameCameraUIModeActive addonIndexed: pas')
+  end
 
   local checkTime = GetGameTimeMilliseconds()
   local guildName = GetGuildName(guildID)
-  if self.isScanningParallel[guildName] then return end
+  if self.isScanningParallel[guildName] then
+    MasterMerchant.v(6, 'Process New Guild History: isScanningParallel : return')
+    return
+  else
+    MasterMerchant.v(6, 'Process New Guild History: isScanningParallel : pas')
+  end
   local numEvents = GetNumGuildEvents(guildID, GUILD_HISTORY_STORE)
   local thePlayer = string.lower(GetDisplayName())
   local eventsAdded = 0
+  --local eventsScaned = 0
   local erroneousEvent = false
-  --MasterMerchant.dm("Debug", "ProcessGuildHistoryResponse: " .. guildName)
+  -- set var to check when finished
+  local theFirstEvent = 0
 
   --MasterMerchant.v(6, 'Process (' .. numEvents .. ') New Guild History Events for: ' .. guildName)
-  MasterMerchant.v(6, 'Process New Guild History Events for: ' .. guildName)
 
   local guildMemberInfo = {}
   -- Index the table with the account names themselves as they're
@@ -2313,23 +2339,33 @@ function MasterMerchant:ProcessGuildHistoryResponse(eventCode, guildID, category
     guildMemberInfo[string.lower(guildMemInfo)] = true
   end
 
+  MasterMerchant.dm("Debug", "ProcessGuildHistoryResponse: " .. guildName)
   -- for i = (self.numEvents[guildName] or 0) + 1, numEvents do
   for i = 1, numEvents do
+    --eventsScaned = i
     local theEvent = {}
-    theEvent.eventType, theEvent.secsSince, theEvent.seller, theEvent.buyer,
-    theEvent.quant, theEvent.itemName, theEvent.salePrice = GetGuildEventInfo(guildID, GUILD_HISTORY_STORE, i)
+    theEvent.eventType, theEvent.secsSince, theEvent.seller, theEvent.buyer, theEvent.quant, theEvent.itemName, theEvent.salePrice, _, theEvent.id = GetGuildEventInfo(guildID, GUILD_HISTORY_STORE, i)
     theEvent.guild = guildName
     theEvent.saleTime = GetTimeStamp() - theEvent.secsSince
-
     if theEvent.secsSince > MasterMerchant.oneYearInSeconds then
       erroneousEvent = true
       break
+    end
+    if i == 1 then theFirstEvent = theEvent.id end
+    if MasterMerchant.lastHeadEvent[guildID] ~= 0 and MasterMerchant.lastHeadEvent[guildID] == theEvent.id then
+      MasterMerchant.v(6, 'Process New Guild History: break')
+      MasterMerchant.v(6, i)
+      MasterMerchant.v(6, MasterMerchant.lastHeadEvent[guildID])
+      MasterMerchant.v(6, theEvent.id)
+      break
+    else
+      MasterMerchant.v(6, MasterMerchant.lastHeadEvent[guildID])
+      MasterMerchant.v(6, theEvent.id)
     end
 
     if theEvent.eventType == GUILD_EVENT_ITEM_SOLD then
 
       theEvent.kioskSale = (guildMemberInfo[string.lower(theEvent.buyer)] == nil)
-      theEvent.id = Id64ToString(GetGuildEventId(guildID, GUILD_HISTORY_STORE, i))
 
       if theEvent.itemName ~= nil and theEvent.seller ~= nil and theEvent.buyer ~= nil and theEvent.salePrice ~= nil then
         -- Insert the entry into the SalesData table and associated indexes
@@ -2353,7 +2389,7 @@ function MasterMerchant:ProcessGuildHistoryResponse(eventCode, guildID, category
     end
   end
 
-  --MasterMerchant.dm("Debug", "eventsAdded: " .. eventsAdded)
+  --MasterMerchant.v(3, "eventsScaned: " .. eventsScaned)
   if eventsAdded > 0 then
     local msgLevel = 3
     if eventsAdded < 10 then
@@ -2413,6 +2449,17 @@ function MasterMerchant:ProcessGuildHistoryResponse(eventCode, guildID, category
     end
   end
 
+  if MasterMerchant.lastHeadEvent[guildID] ~= theFirstEvent and theFirstEvent ~= 0 then
+      MasterMerchant.v(6, MasterMerchant.lastHeadEvent[guildID])
+      MasterMerchant.v(6, theFirstEvent)
+      MasterMerchant.v(6, 'Setting New  lastHeadEvent')
+    MasterMerchant.lastHeadEvent[guildID] = theFirstEvent
+  else
+      MasterMerchant.v(6, 'lastHeadEvent same')
+      MasterMerchant.v(6, MasterMerchant.lastHeadEvent[guildID])
+      MasterMerchant.v(6, theFirstEvent)
+  end
+
 end
 EVENT_MANAGER:RegisterForEvent(MasterMerchant.name, EVENT_GUILD_HISTORY_RESPONSE_RECEIVED, function(...) MasterMerchant:ProcessGuildHistoryResponse(...) end)
 
@@ -2450,7 +2497,6 @@ function MasterMerchant:ProcessSomeParallel(guildID, doAlert, lastSaleTime, star
       -- or the buyer left the guild after buying but before we scanned.
       -- Close enough!
       theEvent.kioskSale = (guildMemberInfo[string.lower(theEvent.buyer)] == nil)
-      theEvent.id = Id64ToString(GetGuildEventId(guildID, GUILD_HISTORY_STORE, i))
 
       -- Don't trust ZOS at all, always check for Dups, except for the very first scan to save some time
       if self:InsertEventParallel(theEvent, doAlert, not self.veryFirstScan) then
@@ -2586,8 +2632,8 @@ function MasterMerchant:ScanOlderParallel(guildID, doAlert, oldNumEvents, badLoa
         else
           MasterMerchant.v(vlevel, MasterMerchant.concat(guildName, ZO_FormatDurationAgo(math.max(secsSinceFirst, secsSinceLast))))
         end
-        self.lastUpdateTime[guildName] = GetTimeStamp() - 86400
-        self.lastUpdateCount[guildName] = 0
+        self.lastUpdateTime[guildName] = GetTimeStamp()
+        self.lastUpdateCount[guildName] = numEvents
       end
 
       local inCooldown = not MasterMerchant:RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE)
@@ -4131,6 +4177,7 @@ function MasterMerchant:InitScrollLists()
     for i = 1, numGuilds do
       local guildID = GetGuildId(i)
       MasterMerchant.lastHistoryRequest[guildID] = GetTimeStamp()
+      MasterMerchant.lastHeadEvent[guildID] = 0
       if MasterMerchant.eventsSinceCache[guildID] == nil then MasterMerchant.eventsSinceCache[guildID] = {} end
     end
 

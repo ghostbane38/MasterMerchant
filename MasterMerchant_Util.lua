@@ -334,7 +334,17 @@ function MasterMerchant:addToHistoryTables(theEvent, checkForDups)
   local theIID = GetItemLinkItemId(theEvent.itemName)
   if theIID == nil then return end
   local itemIndex = self.makeIndexFromLink(theEvent.itemName)
-
+--[[
+  ["buyer"] = buyer,
+  ["guild"] = guild,
+  ["itemLink"] = itemName,
+  ["quant"] = quant,
+  ["timestamp"] = saleTime,
+  ["price"] = salePrice,
+  ["seller"] = seller,
+  ["wasKiosk"] = kioskSale,
+  ["id"] = id,
+]]--
   local newSalesItem =
     {buyer = theEvent.buyer,
     guild = theEvent.guild,
