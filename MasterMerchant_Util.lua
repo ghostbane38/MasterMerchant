@@ -374,20 +374,9 @@ function MasterMerchant:addToHistoryTables(theEvent, checkForDups)
     wasKiosk = theEvent.kioskSale,
     id = theEvent.id}
 
-  if (checkForDups and self.salesData[theIID] and self.salesData[theIID][itemIndex]) then
+  if self.salesData[theIID] and self.salesData[theIID][itemIndex] then
     for k, v in pairs(self.salesData[theIID][itemIndex]['sales']) do
       if v.id == newSalesItem.id then
-        return false
-      end
-      if v.id == nil and
-          v.buyer == newSalesItem.buyer and
-          v.guild == newSalesItem.guild and
-          v.quant == newSalesItem.quant and
-          v.price == newSalesItem.price and
-          v.seller == newSalesItem.seller and
-          string.match(v.itemLink, '|H(.-)|h') == string.match(newSalesItem.itemLink, '|H(.-)|h') and
-          (math.abs(v.timestamp - newSalesItem.timestamp) < 2) then
-        v.id = newSalesItem.id
         return false
       end
     end

@@ -1540,47 +1540,38 @@ function MasterMerchant:PurgeDups()
     self:setScanning(true)
 
     local start = GetTimeStamp()
-
+    local eventArray = { }
     local count = 0
+    local newSales
 
     --spin thru history and remove dups
     for itemNumber, itemNumberData in pairs(self.salesData) do
-      for itemType, dataList in pairs(itemNumberData) do
-
-        if dataList['sales'] then
+      for itemIndex, itemData in pairs(itemNumberData) do
+        if itemData['sales'] then
           local dup
           newSales = {}
-          for _, checking in pairs(dataList['sales']) do
+          for _, checking in pairs(itemData['sales']) do
             dup = false
-            for _, against in pairs(newSales) do
-              if against.id ~= nil and checking.id == against.id then
-                dup = true
-                break
-              end
-              if checking.id == nil and
-                checking.buyer == against.buyer and
-                checking.guild == against.guild and
-                checking.quant == against.quant and
-                checking.price == against.price and
-                checking.seller == against.seller and
-                string.match(checking.itemLink, '|H(.-)|h') == string.match(against.itemLink, '|H(.-)|h') and
-                checking.timestamp == against.timestamp and
-                (math.abs(checking.timestamp - against.timestamp) < 1) then
-                dup = true
-                break
-              end
+            if checking.id == nil then
+              dup = true
+            end
+            if eventArray[checking.id] then
+              dup = true
             end
             if dup then
               -- Remove it by not putting it in the new list, but keep a count
               count = count + 1
             else
               table.insert(newSales, checking)
+              eventArray[checking.id] = true
             end
           end
-          dataList['sales'] = newSales
+          itemData['sales'] = newSales
         end
       end
     end
+    MasterMerchant.v(2, MasterMerchant.NonContiguousNonNilCount(eventArray))
+    eventArray = {} -- clear array
 
     MasterMerchant.v(2, 'Dup purge: ' .. GetTimeStamp() - start .. ' seconds to clear ' .. count .. ' duplicates.')
     MasterMerchant.v(5, 'Reindexing Everything.')
@@ -2227,7 +2218,7 @@ end
 function MasterMerchant:InsertEventParallel(theEvent, doAlert, checkForDups)
   local thePlayer = string.lower(GetDisplayName())
   local settingsToUse = MasterMerchant:ActiveSettings()
-  
+
   if theEvent.itemName ~= nil and theEvent.seller ~= nil and theEvent.buyer ~= nil and theEvent.salePrice ~= nil then
     -- Insert the entry into the SalesData table and associated indexes
     local added = MasterMerchant:addToHistoryTables(theEvent, checkForDups)
@@ -2250,7 +2241,7 @@ function MasterMerchant:ProcessGuildHistoryResponse(eventCode, guildID, category
   if self.isScanning then return end
   if self.isScanningHistory[guildName] then return end
   MasterMerchant:setScanningHistory(true, guildName)
-  
+
   local previousNumEvents = (self.numEvents[guildName] or 0) + 1
   local lastEvent = previousNumEvents
   local numEvents = GetNumGuildEvents(guildID, GUILD_HISTORY_STORE)
