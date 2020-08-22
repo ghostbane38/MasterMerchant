@@ -230,8 +230,28 @@ function MasterMerchant:setScanning(start)
   end
 end
 
-function MasterMerchant:setDigging(start)
-  self.isDigging = start
+function MasterMerchant:setScanningHistory(start, guildName)
+  MasterMerchant.isScanningHistory[guildName] = start
+  MasterMerchantResetButton:SetEnabled(not start)
+  MasterMerchantGuildResetButton:SetEnabled(not start)
+  MasterMerchantRefreshButton:SetEnabled(not start)
+  MasterMerchantGuildRefreshButton:SetEnabled(not start)
+
+  if not start then
+    MasterMerchantWindowLoadingIcon.animation:Stop()
+    MasterMerchantGuildWindowLoadingIcon.animation:Stop()
+    MasterMerchantGuildWindowLoadingIcon.animation:Stop()
+  end
+
+  MasterMerchantWindowLoadingIcon:SetHidden(not start)
+  MasterMerchantGuildWindowLoadingIcon:SetHidden(not start)
+  MasterMerchantGuildWindowLoadingIcon:SetHidden(not start)
+
+  if start then
+    MasterMerchantWindowLoadingIcon.animation:PlayForward()
+    MasterMerchantGuildWindowLoadingIcon.animation:PlayForward()
+    MasterMerchantGuildWindowLoadingIcon.animation:PlayForward()
+  end
 end
 
 function MasterMerchant:setScanningParallel(start, guildName)
@@ -319,8 +339,6 @@ function MasterMerchant:indexHistoryTables()
     MasterMerchant.v(4, '  ' .. extraData.indexCount .. ' sales records')
     MasterMerchant.v(4, '  ' .. extraData.wordsIndexCount .. ' words')
   end
-
-  MasterMerchant.addonIndexed = true
 
   if not self.isScanning then
     self:iterateOverSalesData(nil, nil, nil, prefunc, loopfunc, postfunc, {} )

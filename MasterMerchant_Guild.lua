@@ -244,12 +244,9 @@ MMGuild = {
     if sellerName == nil then return end
     if date == nil then return end
     if type(date) ~= 'number' then return end
-    if not amount then
-      --MasterMerchant.dm("Debug", string.format("%s %s", "addSaleByDate amount: ", amount))
-    end
     if (date >= self.oneStart) then self:addSale(sellerName, 1, amount, stack, wasKiosk, sort, searchText) end;
     if (date >= self.twoStart and date < self.oneStart) then self:addSale(sellerName, 2, amount, stack, wasKiosk, sort, searchText) end;
-    if (date >= self.threeStart and date < self.threeEnd) then self:addSale(sellerName, 3, amount, stack, wasKiosk, sort, searchText) end;
+    if (date >= self.threeStart) then self:addSale(sellerName, 3, amount, stack, wasKiosk, sort, searchText) end;
     if (date >= self.fourStart and date < self.fourEnd) then self:addSale(sellerName, 4, amount, stack, wasKiosk, sort, searchText) end;
     if (date >= self.fiveStart and date < self.fiveEnd) then self:addSale(sellerName, 5, amount, stack, wasKiosk, sort, searchText) end;
     if (date >= self.sixStart) then self:addSale(sellerName, 6, amount, stack, wasKiosk, sort, searchText) end;
@@ -262,7 +259,7 @@ MMGuild = {
     if sellerName == nil then return end
     if (date >= self.oneStart) then self:removeSale(sellerName, 1, amount) end;
     if (date >= self.twoStart and date < self.oneStart) then self:removeSale(sellerName, 2, amount, stack) end;
-    if (date >= self.threeStart and date < self.threeEnd) then self:removeSale(sellerName, 3, amount, stack) end;
+    if (date >= self.threeStart) then self:removeSale(sellerName, 3, amount, stack) end;
     if (date >= self.fourStart and date < self.fourEnd) then self:removeSale(sellerName, 4, amount, stack) end;
     if (date >= self.fiveStart and date < self.fiveEnd) then self:removeSale(sellerName, 5, amount, stack) end;
     if (date >= self.sixStart) then self:removeSale(sellerName, 6, amount, stack) end;
