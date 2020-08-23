@@ -1237,26 +1237,8 @@ function MasterMerchant:LibAddonInit()
         MasterMerchant.listIsDirty[LISTINGS] = true
       end,
     },
-    -- Scan frequency (in seconds)
-    [6] = {
-      type = 'slider',
-      name = GetString(SK_SCAN_FREQ_NAME),
-      tooltip = GetString(SK_SCAN_FREQ_TIP),
-      min = 300,
-      max = 3600,
-      getFunc = function() return self:ActiveSettings().scanFreq end,
-      setFunc = function(value)
-        self:ActiveSettings().scanFreq = value
-        self.savedVariables.scanFreq = value
-
-        local scanInterval = value * 1000
-        EVENT_MANAGER:UnregisterForUpdate(self.name)
-        EVENT_MANAGER:RegisterForUpdate(self.name, scanInterval, function() self:ScanStoresParallel(true) end)
-      end,
-      default = 600, -- per defaults
-    },
     -- Size of sales history
-    [7] = {
+    [6] = {
       type = 'slider',
       name = GetString(SK_HISTORY_DEPTH_NAME),
       tooltip = GetString(SK_HISTORY_DEPTH_TIP),
@@ -1266,7 +1248,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self.systemSavedVariables.historyDepth = value end,
     },
     -- Min Number of Items before Purge
-    [8] = {
+    [7] = {
       type = 'slider',
       name = GetString(MM_MIN_ITEM_COUNT_NAME),
       tooltip = GetString(MM_MIN_ITEM_COUNT_TIP),
@@ -1276,7 +1258,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self.systemSavedVariables.minItemCount = value end,
     },
     -- Max number of Items
-    [9] = {
+    [8] = {
       type = 'slider',
       name = GetString(MM_MAX_ITEM_COUNT_NAME),
       tooltip = GetString(MM_MAX_ITEM_COUNT_TIP),
@@ -1286,7 +1268,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self.systemSavedVariables.maxItemCount = value end,
     },
     -- Whether or not to show the pricing data in tooltips
-    [10] = {
+    [9] = {
       type = 'checkbox',
       name = GetString(SK_SHOW_PRICING_NAME),
       tooltip = GetString(SK_SHOW_PRICING_TIP),
@@ -1294,7 +1276,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().showPricing = value end,
     },
     -- Whether or not to show the pricing graph in tooltips
-    [11] = {
+    [10] = {
       type = 'checkbox',
       name = GetString(SK_SHOW_GRAPH_NAME),
       tooltip = GetString(SK_SHOW_GRAPH_TIP),
@@ -1302,7 +1284,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().showGraph = value end,
     },
   -- Whether or not to show tooltips on the graph points
-    [12] = {
+    [11] = {
       type = 'checkbox',
       name = GetString(MM_GRAPH_INFO_NAME),
       tooltip = GetString(MM_GRAPH_INFO_TIP),
@@ -1310,7 +1292,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().displaySalesDetails = value end,
     },
     -- Whether or not to show the crafting costs data in tooltips
-    [13] = {
+    [12] = {
       type = 'checkbox',
       name = GetString(SK_SHOW_CRAFT_COST_NAME),
       tooltip = GetString(SK_SHOW_CRAFT_COST_TIP),
@@ -1318,7 +1300,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().showCraftCost = value end,
     },
     -- Whether or not to show the quality/level adjustment buttons
-    [14] = {
+    [13] = {
       type = 'checkbox',
       name = GetString(MM_LEVEL_QUALITY_NAME),
       tooltip = GetString(MM_LEVEL_QUALITY_TIP),
@@ -1327,7 +1309,7 @@ function MasterMerchant:LibAddonInit()
     },
 
     -- Should we show the stack price calculator?
-    [15] = {
+    [14] = {
       type = 'checkbox',
       name = GetString(SK_CALC_NAME),
       tooltip = GetString(SK_CALC_TIP),
@@ -1335,7 +1317,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().showCalc = value end,
     },
     -- should we trim outliers prices?
-    [16] = {
+    [15] = {
       type = 'checkbox',
       name = GetString(SK_TRIM_OUTLIERS_NAME),
       tooltip = GetString(SK_TRIM_OUTLIERS_TIP),
@@ -1343,7 +1325,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().trimOutliers = value end,
     },
     -- should we trim off decimals?
-    [17] = {
+    [16] = {
       type = 'checkbox',
       name = GetString(SK_TRIM_DECIMALS_NAME),
       tooltip = GetString(SK_TRIM_DECIMALS_TIP),
@@ -1351,7 +1333,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().trimDecimals = value end,
     },
     -- should we replace inventory values?
-    [18] = {
+    [17] = {
       type = 'checkbox',
       name = GetString(MM_REPLACE_INVENTORY_VALUES_NAME),
       tooltip = GetString(MM_REPLACE_INVENTORY_VALUES_TIP),
@@ -1359,7 +1341,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().replaceInventoryValues = value end,
     },
     -- should we display info on guild roster?
-    [19] = {
+    [18] = {
       type = 'checkbox',
       name = GetString(SK_ROSTER_INFO_NAME),
       tooltip = GetString(SK_ROSTER_INFO_TIP),
@@ -1367,7 +1349,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().diplayGuildInfo = value end,
     },
     -- should we display profit instead of margin?
-    [20] = {
+    [19] = {
       type = 'checkbox',
       name = GetString(MM_SAUCY_NAME),
       tooltip = GetString(MM_SAUCY_TIP),
@@ -1375,7 +1357,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().saucy = value end,
     },
     -- should we display a Min Profit Filter in AGS?
-    [21] = {
+    [20] = {
       type = 'checkbox',
       name = GetString(MM_MIN_PROFIT_FILTER_NAME),
       tooltip = GetString(MM_MIN_PROFIT_FILTER_TIP),
@@ -1383,7 +1365,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().minProfitFilter = value end,
     },
     -- should we auto advance to the next page?
-    [22] = {
+    [21] = {
       type = 'checkbox',
       name = GetString(MM_AUTO_ADVANCE_NAME),
       tooltip = GetString(MM_AUTO_ADVANCE_TIP),
@@ -1391,7 +1373,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().autoNext = value end,
     },
     -- should we display the item listed message?
-    [23] = {
+    [22] = {
       type = 'checkbox',
       name = GetString(MM_DISPLAY_LISTING_MESSAGE_NAME),
       tooltip = GetString(MM_DISPLAY_LISTING_MESSAGE_TIP),
@@ -1399,7 +1381,7 @@ function MasterMerchant:LibAddonInit()
       setFunc = function(value) self:ActiveSettings().displayListingMessage = value end,
     },
     -- Font to use
-    [24] = {
+    [23] = {
       type = 'dropdown',
       name = GetString(SK_WINDOW_FONT_NAME),
       tooltip = GetString(SK_WINDOW_FONT_TIP),
@@ -1414,7 +1396,7 @@ function MasterMerchant:LibAddonInit()
       end,
     },
     -- Verbose MM Messages
-    [25] = {
+    [24] = {
       type = 'slider',
       name = GetString(MM_VERBOSE_NAME),
       tooltip = GetString(MM_VERBOSE_TIP),
@@ -1428,7 +1410,7 @@ function MasterMerchant:LibAddonInit()
                 end,
     },
     -- Make all settings account-wide (or not)
-    [26] = {
+    [25] = {
       type = 'checkbox',
       name = GetString(SK_ACCOUNT_WIDE_NAME),
       tooltip = GetString(SK_ACCOUNT_WIDE_TIP),
@@ -1570,7 +1552,7 @@ function MasterMerchant:PurgeDups()
         end
       end
     end
-    MasterMerchant.v(2, MasterMerchant.NonContiguousNonNilCount(eventArray))
+    --MasterMerchant.v(2, MasterMerchant.NonContiguousNonNilCount(eventArray))
     eventArray = {} -- clear array
 
     MasterMerchant.v(2, 'Dup purge: ' .. GetTimeStamp() - start .. ' seconds to clear ' .. count .. ' duplicates.')
@@ -2475,20 +2457,40 @@ function MasterMerchant:DoScanParallel(guildID, checkOlder, doAlert, lastSaleTim
   end
 
   -- if it's just yielded to us wait a little bit then continue
+  --[[ Change to:
+  if there was an erroneous timestamp in the history queue again
+  and process later after the history updates a little more.
+  ]]--
   if loopIncrement ~= 0 then
     zo_callLater(function() self:DoScanParallel(guildID, checkOlder, doAlert, lastSaleTime, startIndex, endIndex, loopIncrement) end, 40)
     return
   end
 
   -- We got through any new (to us) events, so update the timestamp and number of events
+  --[[
+  Not sure this is accurate, self.requestTimestamp is only
+  set when using /mm missing and not set in DoScanParallel.
+  Although it is set in Scan Stores Parallel which is called
+  first.
+  ]]--
   self.systemSavedVariables.lastScan[guildName] = self.requestTimestamp
   self.numEvents[guildName] = numEvents
 
   if GuildSalesAssistant and GuildSalesAssistant.MasterMerchantEdition then
+    --[[
+    Not sure this is accurate, self.requestTimestamp is only
+    set when using /mm missing and not set in DoScanParallel.
+    Although it is set in Scan Stores Parallel which is called
+    first.
+    ]]--
     GuildSalesAssistant:GuildScanDone(guildName, self.requestTimestamp)
   end
 
   -- DEBUG
+  --[[Completed Scanning:DoScanParallel
+  This happesn last after all the DoScanParallel, ProcessSomeParallel
+  operations are completed.
+  ]]--
   if self.addedEvents[guildName] > 0 then
     MasterMerchant.v(3, 'Completed Scanning: ' .. guildName .. ' added ' .. self.addedEvents[guildName] .. ' sales.')
   else
@@ -2539,13 +2541,7 @@ function MasterMerchant:ScanOlderParallel(guildID, doAlert, oldNumEvents, badLoa
         self.lastUpdateCount[guildName] = numEvents
       end
 
-      local inCooldown = not MasterMerchant:RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE)
-      if inCooldown then
-        -- We were told we are not getting more records just yet, so it's not really a badLoad
-        MasterMerchant.v(7, 'In RequestMoreGuildHistoryCategoryEvents Cooldown.')
-        --badLoads = -1
-      end
-      -- DEBUG  -guild scanning
+      MasterMerchant:RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE)
       zo_callLater(function() self:ScanOlderParallel(guildID, doAlert, numEvents, badLoads) end, 3000)
     else
       -- Otherwise we've got all the new stuff, so call DoScan.
@@ -2581,6 +2577,37 @@ function MasterMerchant:ScanStoresParallel(doAlert)
   -- don't do it again so we don't hammer the server either accidentally
   -- or on purpose
   local timeLimit = GetTimeStamp() - 15
+  --[[
+  Not sure this is accurate, self.requestTimestamp is set
+  when using /mm missing and just below and Scan Stores Parallel
+  is called to start the entire process.
+  ]]--
+
+  --[[
+  Order of events:
+
+  Pre Setup: ReIndexSales, ReferenceSales
+
+  Setup: LibAddonInit, SalesStats, initGMTools, initPurchaseTracking,
+  TruncateHistory, iterateOverSalesData, InitItemHistory,
+  iterateOverSalesData, initRosterStats, InitRosterChanges, BuildMasterList,
+  iterateOverSalesData, Full Indexing..., InitScrollLists
+
+  Setup 2: iterateOverSalesData is followed by CleanTimestamp when needed. Although
+  TruncateHistory is what calls CleanTimestamp, not any other routine.
+
+  Setup 3: initRosterStats will call AddRosterStats
+
+  Scanning: ScanStoresParallel
+
+  Queued Scanning: ScanOlderParallel, DoScanParallel,
+  ProcessSomeParallel, DoScanParallel, ProcessSomeParallel,
+  DoScanParallel, ProcessSomeParallel, Added X sales
+
+  Cleanup: PostScanParallel, SalesStats
+
+  Also I have seen PostScanParallel followed by SwitchPrice
+  ]]--
   if (timeLimit > (self.requestTimestamp or 0)) then
     -- Simple scanning
     MasterMerchant.v(4, 'Retrieving Sales...')
@@ -2641,27 +2668,26 @@ function MasterMerchant:DoRefresh()
 end
 
 function MasterMerchant:RequestMoreGuildHistoryCategoryEvents(guildID, selectedCategory)
-  --MasterMerchant.dm("Debug", "We are going to request more data with a MM routine.")
-  if self.moreEventsRequested[guildID] or
-    DoesGuildHistoryCategoryHaveOutstandingRequest(guildID, selectedCategory) or
-    IsGuildHistoryCategoryRequestQueued(guildID, selectedCategory) or
-    not DoesGuildHistoryCategoryHaveMoreEvents(guildID, GUILD_HISTORY_STORE) then
-    return
-  end
-  local result = RequestMoreGuildHistoryCategoryEvents(guildID, selectedCategory)
-  if result then
-    MasterMerchant.v(5, 'More data requested for guild: ' .. GetGuildName(guildID))
+  local guildName = GetGuildName(guildID)
+  local result = false
+  MasterMerchant.v(6, "We are going to check for more older events for " .. guildName .. ".")
+  if DoesGuildHistoryCategoryHaveMoreEvents(guildID, GUILD_HISTORY_STORE) then
+    MasterMerchant.v(6, "There were more events, request some for " .. guildName .. ".")
+    result = RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE)
+    if not result then
+      MasterMerchant.v(6, "Boooo request denied, ask again in 5 seconds for " .. guildName .. ".")
+      zo_callLater(function()
+        MasterMerchant:RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE)
+      end, 5000)
+    else
+      MasterMerchant.v(6, ">>> YEAH WE GOT SOME <<< for " .. guildName .. ".")
+      MasterMerchant.v(6, "Ask again in 5 seconds for " .. guildName .. ".")
+      zo_callLater(function()
+        MasterMerchant:RequestMoreGuildHistoryCategoryEvents(guildID, GUILD_HISTORY_STORE)
+      end, 5000)
+    end
   else
-    -- Try every 30 seconds until they let us go thru
-    MasterMerchant.v(7, 'More data request denied for guild: ' .. GetGuildName(guildID))
-    self.moreEventsRequested[guildID] = false
-    --[[
-    self.moreEventsRequested[guildID] = true
-    zo_callLater(function()
-      self.moreEventsRequested[guildID] = false
-      MasterMerchant:RequestMoreGuildHistoryCategoryEvents(guildID, selectedCategory)
-    end, 30000)
-    ]]--
+    MasterMerchant.v(6, "There were no more events for " .. guildName .. ".")
   end
   return result
 end
@@ -2823,6 +2849,13 @@ function MasterMerchant:initRosterStats()
 end
 
 function MasterMerchant:BuildMasterList()
+  --[[
+  This happens when you go to the guild history for a guild.
+  This happens each time you change guilds also. Meaning
+  it is refreshed each time.
+
+  BuildMasterList, AddRosterStats
+  ]]--
     if not self.masterList then return end
 
     MasterMerchant.originalRosterBuildMasterList(self)
@@ -4207,7 +4240,6 @@ local function OnAddOnLoaded(eventCode, addOnName)
 
    --this game font is missing in all versions of LMP
    LMP:Register('font', 'Futura Condensed Bold',  'EsoUI/Common/Fonts/FuturaStd-CondensedBold.otf')
-
 end
 
 
