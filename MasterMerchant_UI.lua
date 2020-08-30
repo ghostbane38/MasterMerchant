@@ -19,7 +19,7 @@ function MasterMerchant:SortByPrice(ordering, scrollList)
 
   if not ordering then
     -- If they're viewing prices per-unit, then we need to sort on price / quantity.
-    if self:ActiveSettings().showUnitPrice then
+    if self.savedVariables.showUnitPrice then
       MasterMerchant.shellSort(listData, function(sortA, sortB)
         -- In case quantity ends up 0 or nil somehow, let's not divide by it
         if sortA.data[6] and sortA.data[6] > 0 and sortB.data[6] and sortB.data[6] > 0 then
@@ -34,7 +34,7 @@ function MasterMerchant:SortByPrice(ordering, scrollList)
     end
   else
     -- And the same thing with descending sort
-    if self:ActiveSettings().showUnitPrice then
+    if self.savedVariables.showUnitPrice then
       MasterMerchant.shellSort(listData, function(sortA, sortB)
         -- In case quantity ends up 0 or nil somehow, let's not divide by it
         if sortA.data[6] and sortA.data[6] > 0 and sortB.data[6] and sortB.data[6] > 0 then
@@ -1149,7 +1149,7 @@ function MasterMerchant:remStatsItemTooltip()
 
 function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
 
-  if not (self:ActiveSettings().showPricing or self:ActiveSettings().showGraph or self:ActiveSettings().showCraftCost) then return end
+  if not (self.savedVariables.showPricing or self.savedVariables.showGraph or self.savedVariables.showCraftCost) then return end
 
   local tipLine, avePrice, graphInfo = self:itemPriceTip(itemLink, false, clickable)
   local craftCostLine = self:itemCraftPriceTip(itemLink, false)
@@ -1158,7 +1158,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
     tooltip.textPool = ZO_ControlPool:New('MMGraphLabel', tooltip, 'Text')
   end
 
-  if self:ActiveSettings().displayItemAnalysisButtons and not tooltip.mmQualityDown then
+  if self.savedVariables.displayItemAnalysisButtons and not tooltip.mmQualityDown then
     tooltip.mmQualityDown = tooltip.textPool:AcquireObject()
     tooltip:AddControl(tooltip.mmQualityDown, 1, true)
     tooltip.mmQualityDown:SetAnchor(LEFT)
@@ -1223,7 +1223,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
   end
 
   local itemType = GetItemLinkItemType(itemLink)
-  if (clickable) and self:ActiveSettings().displayItemAnalysisButtons and (itemType == 1 or itemType == 2 or itemType == 20 or itemType == 21 or itemType == 26) then
+  if (clickable) and self.savedVariables.displayItemAnalysisButtons and (itemType == 1 or itemType == 2 or itemType == 20 or itemType == 21 or itemType == 26) then
 
     local itemQuality = GetItemLinkQuality(itemLink)
     tooltip.mmQualityDown.mmData.nextItem = MasterMerchant.QualityDown(itemLink)
@@ -1288,7 +1288,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
 
   if tipLine then
 
-    if self:ActiveSettings().showPricing then
+    if self.savedVariables.showPricing then
 
       if not tooltip.mmText then
         tooltip:AddVerticalPadding(5)
@@ -1306,7 +1306,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
 
     end
 
-    if self:ActiveSettings().showCraftCost then
+    if self.savedVariables.showCraftCost then
 
 	  if craftCostLine then
 		  if not tooltip.mmCraftText then
@@ -1324,7 +1324,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
 
     end
 
-    if self:ActiveSettings().showGraph then
+    if self.savedVariables.showGraph then
 
       if not tooltip.graphPool then
           tooltip.graphPool = ZO_ControlPool:New('MasterMerchantGraph', tooltip, 'Graph')
@@ -1347,7 +1347,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
         if not graph.points then
           graph.points = MM_Graph:New(graph)
         end
-        local format = (self:ActiveSettings().trimDecimals and '%.0f') or '%.2f'
+        local format = (self.savedVariables.trimDecimals and '%.0f') or '%.2f'
         if graphInfo.low == graphInfo.high then
             graphInfo.low = avePrice * 0.85
             graphInfo.high = avePrice * 1.15
@@ -1356,7 +1356,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
         local xLow = string.format(format, graphInfo.low) .. '|t16:16:EsoUI/Art/currency/currency_gold.dds|t'
         local xHigh = string.format(format, graphInfo.high) .. '|t16:16:EsoUI/Art/currency/currency_gold.dds|t'
         graph.points:Initialize(MasterMerchant.TextTimeSince(graphInfo.oldestTime), "Now", xLow, xHigh, graphInfo.oldestTime, GetTimeStamp(), graphInfo.low, graphInfo.high)
-        if self:ActiveSettings().displaySalesDetails then
+        if self.savedVariables.displaySalesDetails then
           for _, point in ipairs(graphInfo.points) do
               graph.points:AddPoint(point[1], point[2], point[3], point[4])
           end
@@ -1372,7 +1372,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
     end
   else
   -- No price but may have craft cost
-	if self:ActiveSettings().showCraftCost and craftCostLine then
+	if self.savedVariables.showCraftCost and craftCostLine then
       if not tooltip.mmCraftText then
         tooltip:AddVerticalPadding(5)
         ZO_Tooltip_AddDivider(tooltip)
@@ -1389,7 +1389,7 @@ function MasterMerchant:addStatsAndGraph(tooltip, itemLink, clickable)
 	end
   end
 
-  if self:ActiveSettings().verbose == 7 then
+  if self.savedVariables.verbose == 7 then
     if not tooltip.mmTextDebug then
       tooltip.mmTextDebug = tooltip.textPool:AcquireObject()
       tooltip:AddControl(tooltip.mmTextDebug)
@@ -1441,7 +1441,7 @@ function MasterMerchant:addStatsPopupTooltip(Popup)
 
   -- Make sure we don't double-add stats (or double-calculate them if they bring
   -- up the same link twice) since we have to call this on Update rather than Show
-  if (not (self:ActiveSettings().showPricing or self:ActiveSettings().showGraph or self:ActiveSettings().showCraftCost))
+  if (not (self.savedVariables.showPricing or self.savedVariables.showGraph or self.savedVariables.showCraftCost))
    or Popup.lastLink == nil
    or (Popup.mmActiveTip and Popup.mmActiveTip == Popup.lastLink and self.isShiftPressed == IsShiftKeyDown() and self.isCtrlPressed == IsControlKeyDown()) then -- thanks Garkin
     return
@@ -1490,7 +1490,7 @@ function MasterMerchant:addStatsItemTooltip()
   -- Make sure we don't double-add stats or try to add them to nothing
   -- Since we call this on Update rather than Show it gets called a lot
   -- even after the tip appears
-  if (not (self:ActiveSettings().showPricing or self:ActiveSettings().showGraph or self:ActiveSettings().showCraftCost))
+  if (not (self.savedVariables.showPricing or self.savedVariables.showGraph or self.savedVariables.showCraftCost))
      or (not skMoc or not skMoc:GetParent())
      or (skMoc == self.tippingControl and self.isShiftPressed == IsShiftKeyDown() and self.isCtrlPressed == IsControlKeyDown()) then
     return
@@ -1894,7 +1894,7 @@ function MasterMerchant:SetupMasterMerchantWindow()
   -- Set sort column headers and search label from translation
   local fontString = 'ZoFontGameLargeBold'
   local guildFontString = 'ZoFontGameLargeBold'
-  local font = LMP:Fetch('font', self:ActiveSettings().windowFont)
+  local font = LMP:Fetch('font', self.savedVariables.windowFont)
   fontString = font .. '|17'
   guildFontString = font .. '|17'
 

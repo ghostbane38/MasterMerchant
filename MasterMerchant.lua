@@ -55,19 +55,19 @@ end
 
 function MasterMerchant:TimeCheck()
     -- setup focus info
-    local range = self:ActiveSettings().defaultDays
+    local range = self.savedVariables.defaultDays
     if IsControlKeyDown() and IsShiftKeyDown() then
-      range = self:ActiveSettings().ctrlShiftDays
+      range = self.savedVariables.ctrlShiftDays
     elseif IsControlKeyDown() then
-      range = self:ActiveSettings().ctrlDays
+      range = self.savedVariables.ctrlDays
     elseif IsShiftKeyDown() then
-      range = self:ActiveSettings().shiftDays
+      range = self.savedVariables.shiftDays
     end
 
     local daysRange = 10000
     if range == GetString(MM_RANGE_NONE) then return -1, -1 end
-    if range == GetString(MM_RANGE_FOCUS1) then daysRange = self:ActiveSettings().focus1 end
-    if range == GetString(MM_RANGE_FOCUS2) then daysRange = self:ActiveSettings().focus2 end
+    if range == GetString(MM_RANGE_FOCUS1) then daysRange = self.savedVariables.focus1 end
+    if range == GetString(MM_RANGE_FOCUS2) then daysRange = self.savedVariables.focus2 end
 
     return GetTimeStamp() - (86400 * daysRange), daysRange
 end
@@ -81,7 +81,7 @@ function MasterMerchant:toolTipStats(itemID, itemIndex, skipDots, goBack, clicka
 
     local list = self.salesData[itemID][itemIndex]['sales']
 
-    local lowerBlacklist = self:ActiveSettings().blacklist and self:ActiveSettings().blacklist:lower() or ""
+    local lowerBlacklist = self.savedVariables.blacklist and self.savedVariables.blacklist:lower() or ""
 
     local timeCheck, daysRange = self:TimeCheck()
 
@@ -174,7 +174,7 @@ function MasterMerchant:toolTipStats(itemID, itemIndex, skipDots, goBack, clicka
           (not zo_plainstrfind(lowerBlacklist, item.buyer:lower())) and
           (not zo_plainstrfind(lowerBlacklist, item.seller:lower())) and
           (not zo_plainstrfind(lowerBlacklist, item.guild:lower())) and
-          ((not self:ActiveSettings().trimOutliers) or math.abs((item.price/item.quant) - initMean) <= (3 * standardDeviation)) then
+          ((not self.savedVariables.trimOutliers) or math.abs((item.price/item.quant) - initMean) <= (3 * standardDeviation)) then
           avgPrice = avgPrice + item.price
           countSold = countSold + item.quant
           legitSales = legitSales + 1
@@ -184,7 +184,7 @@ function MasterMerchant:toolTipStats(itemID, itemIndex, skipDots, goBack, clicka
             local tooltip = nil
             if clickable then
               local stringPrice = '';
-              if self:ActiveSettings().trimDecimals then
+              if self.savedVariables.trimDecimals then
                 stringPrice = string.format('%.0f', item.price/item.quant)
               else
                 stringPrice = string.format('%.2f', item.price/item.quant)
@@ -215,7 +215,7 @@ function MasterMerchant:toolTipStats(itemID, itemIndex, skipDots, goBack, clicka
           (not zo_plainstrfind(lowerBlacklist, item.buyer:lower())) and
           (not zo_plainstrfind(lowerBlacklist, item.seller:lower())) and
           (not zo_plainstrfind(lowerBlacklist, item.guild:lower())) and
-          ((not self:ActiveSettings().trimOutliers) or math.abs((item.price/item.quant) - initMean) <= (3 * standardDeviation)) then
+          ((not self.savedVariables.trimOutliers) or math.abs((item.price/item.quant) - initMean) <= (3 * standardDeviation)) then
           local weightValue = dayInterval - math.floor((GetTimeStamp() - item.timestamp) / 86400.0)
           avgPrice = avgPrice + (item.price * weightValue)
           countSold = countSold + item.quant
@@ -227,7 +227,7 @@ function MasterMerchant:toolTipStats(itemID, itemIndex, skipDots, goBack, clicka
             local tooltip = nil
             if clickable then
               local stringPrice = '';
-              if self:ActiveSettings().trimDecimals then
+              if self.savedVariables.trimDecimals then
                 stringPrice = string.format('%.0f', item.price/item.quant)
               else
                 stringPrice = string.format('%.2f', item.price/item.quant)
@@ -277,7 +277,7 @@ function MasterMerchant:itemPriceTip(itemLink, chatText, clickable)
       tipFormat = GetString(MM_TIP_FORMAT_MULTI)
     end
     local avePriceString = '';
-    if (tipStats['avgPrice'] > 100) and self:ActiveSettings().trimDecimals then
+    if (tipStats['avgPrice'] > 100) and self.savedVariables.trimDecimals then
       avePriceString = string.format('%.0f', tipStats['avgPrice'])
       --tipFormat = string.gsub(tipFormat, '.2f', '.0f')
     else
@@ -450,7 +450,7 @@ function MasterMerchant:itemCraftPriceTip(itemLink, chatText)
     if cost then
       craftTip = "Craft Cost: %s"
 
-      if (cost > 100) and self:ActiveSettings().trimDecimals then
+      if (cost > 100) and self.savedVariables.trimDecimals then
         craftTipString = string.format('%.0f', cost)
       else
         craftTipString = string.format('%.2f', cost)
@@ -951,7 +951,7 @@ function MasterMerchant:SalesStats(statsDays)
 
   local goldPerDay = {}
   local kioskPercentage = {}
-  local showFullPrice = self:ActiveSettings().showFullPrice
+  local showFullPrice = self.savedVariables.showFullPrice
 
   -- Here we'll tweak stats as needed as well as add guilds to the guild chooser
   for theGuildName, guildItemsSold in pairs(itemsSold) do
@@ -1014,23 +1014,23 @@ function MasterMerchant:LibAddonInit()
           type = 'checkbox',
           name = GetString(SK_ALERT_ANNOUNCE_NAME),
           tooltip = GetString(SK_ALERT_ANNOUNCE_TIP),
-          getFunc = function() return self:ActiveSettings().showAnnounceAlerts end,
-          setFunc = function(value) self:ActiveSettings().showAnnounceAlerts = value end,
+          getFunc = function() return self.savedVariables.showAnnounceAlerts end,
+          setFunc = function(value) self.savedVariables.showAnnounceAlerts = value end,
         },
         [2] = {
           type = 'checkbox',
           name = GetString(SK_ALERT_CYRODIIL_NAME),
           tooltip = GetString(SK_ALERT_CYRODIIL_TIP),
-          getFunc = function() return self:ActiveSettings().showCyroAlerts end,
-          setFunc = function(value) self:ActiveSettings().showCyroAlerts = value end,
+          getFunc = function() return self.savedVariables.showCyroAlerts end,
+          setFunc = function(value) self.savedVariables.showCyroAlerts = value end,
         },
         -- Chat Alerts
         [3] = {
           type = 'checkbox',
           name = GetString(SK_ALERT_CHAT_NAME),
           tooltip = GetString(SK_ALERT_CHAT_TIP),
-          getFunc = function() return self:ActiveSettings().showChatAlerts end,
-          setFunc = function(value) self:ActiveSettings().showChatAlerts = value end,
+          getFunc = function() return self.savedVariables.showChatAlerts end,
+          setFunc = function(value) self.savedVariables.showChatAlerts = value end,
         },
         -- Sound to use for alerts
         [4] = {
@@ -1038,10 +1038,10 @@ function MasterMerchant:LibAddonInit()
           name = GetString(SK_ALERT_TYPE_NAME),
           tooltip = GetString(SK_ALERT_TYPE_TIP),
           choices = self:SoundKeys(),
-          getFunc = function() return self:SearchSounds(self:ActiveSettings().alertSoundName) end,
+          getFunc = function() return self:SearchSounds(self.savedVariables.alertSoundName) end,
           setFunc = function(value)
-            self:ActiveSettings().alertSoundName = self:SearchSoundNames(value)
-            PlaySound(self:ActiveSettings().alertSoundName)
+            self.savedVariables.alertSoundName = self:SearchSoundNames(value)
+            PlaySound(self.savedVariables.alertSoundName)
           end,
         },
         -- Whether or not to show multiple alerts for multiple sales
@@ -1049,16 +1049,16 @@ function MasterMerchant:LibAddonInit()
           type = 'checkbox',
           name = GetString(SK_MULT_ALERT_NAME),
           tooltip = GetString(SK_MULT_ALERT_TIP),
-          getFunc = function() return self:ActiveSettings().showMultiple end,
-          setFunc = function(value) self:ActiveSettings().showMultiple = value end,
+          getFunc = function() return self.savedVariables.showMultiple end,
+          setFunc = function(value) self.savedVariables.showMultiple = value end,
         },
         -- Offline sales report
         [6] = {
           type = 'checkbox',
           name = GetString(SK_OFFLINE_SALES_NAME),
           tooltip = GetString(SK_OFFLINE_SALES_TIP),
-          getFunc = function() return self:ActiveSettings().offlineSales end,
-          setFunc = function(value) self:ActiveSettings().offlineSales = value end,
+          getFunc = function() return self.savedVariables.offlineSales end,
+          setFunc = function(value) self.savedVariables.offlineSales = value end,
         },
       },
     },
@@ -1075,8 +1075,8 @@ function MasterMerchant:LibAddonInit()
           tooltip = GetString(MM_DAYS_FOCUS_ONE_TIP),
           min = 1,
           max = 90,
-          getFunc = function() return self:ActiveSettings().focus1 end,
-          setFunc = function(value) self:ActiveSettings().focus1 = value end,
+          getFunc = function() return self.savedVariables.focus1 end,
+          setFunc = function(value) self.savedVariables.focus1 = value end,
         },
         [2] = {
           type = 'slider',
@@ -1084,8 +1084,8 @@ function MasterMerchant:LibAddonInit()
           tooltip = GetString(MM_DAYS_FOCUS_TWO_TIP),
           min = 1,
           max = 90,
-          getFunc = function() return self:ActiveSettings().focus2 end,
-          setFunc = function(value) self:ActiveSettings().focus2 = value end,
+          getFunc = function() return self.savedVariables.focus2 end,
+          setFunc = function(value) self.savedVariables.focus2 = value end,
         },
         -- default time range
         [3] = {
@@ -1093,8 +1093,8 @@ function MasterMerchant:LibAddonInit()
           name = GetString(MM_DEFAULT_TIME_NAME),
           tooltip = GetString(MM_DEFAULT_TIME_TIP),
           choices = {GetString(MM_RANGE_ALL),GetString(MM_RANGE_FOCUS1),GetString(MM_RANGE_FOCUS2),GetString(MM_RANGE_NONE)},
-          getFunc = function() return self:ActiveSettings().defaultDays end,
-          setFunc = function(value) self:ActiveSettings().defaultDays = value end,
+          getFunc = function() return self.savedVariables.defaultDays end,
+          setFunc = function(value) self.savedVariables.defaultDays = value end,
         },
         -- shift time range
         [4] = {
@@ -1102,8 +1102,8 @@ function MasterMerchant:LibAddonInit()
           name = GetString(MM_SHIFT_TIME_NAME),
           tooltip = GetString(MM_SHIFT_TIME_TIP),
           choices = {GetString(MM_RANGE_ALL),GetString(MM_RANGE_FOCUS1),GetString(MM_RANGE_FOCUS2),GetString(MM_RANGE_NONE)},
-          getFunc = function() return self:ActiveSettings().shiftDays end,
-          setFunc = function(value) self:ActiveSettings().shiftDays = value end,
+          getFunc = function() return self.savedVariables.shiftDays end,
+          setFunc = function(value) self.savedVariables.shiftDays = value end,
         },
         -- ctrl time range
         [5] = {
@@ -1111,8 +1111,8 @@ function MasterMerchant:LibAddonInit()
           name = GetString(MM_CTRL_TIME_NAME),
           tooltip = GetString(MM_CTRL_TIME_TIP),
           choices = {GetString(MM_RANGE_ALL),GetString(MM_RANGE_FOCUS1),GetString(MM_RANGE_FOCUS2),GetString(MM_RANGE_NONE)},
-          getFunc = function() return self:ActiveSettings().ctrlDays end,
-          setFunc = function(value) self:ActiveSettings().ctrlDays = value end,
+          getFunc = function() return self.savedVariables.ctrlDays end,
+          setFunc = function(value) self.savedVariables.ctrlDays = value end,
         },
         -- ctrl-shift time range
         [6] = {
@@ -1120,8 +1120,8 @@ function MasterMerchant:LibAddonInit()
           name = GetString(MM_CTRLSHIFT_TIME_NAME),
           tooltip = GetString(MM_CTRLSHIFT_TIME_TIP),
           choices = {GetString(MM_RANGE_ALL),GetString(MM_RANGE_FOCUS1),GetString(MM_RANGE_FOCUS2),GetString(MM_RANGE_NONE)},
-          getFunc = function() return self:ActiveSettings().ctrlShiftDays end,
-          setFunc = function(value) self:ActiveSettings().ctrlShiftDays = value end,
+          getFunc = function() return self.savedVariables.ctrlShiftDays end,
+          setFunc = function(value) self.savedVariables.ctrlShiftDays = value end,
         },
         [7] = {
           type = 'slider',
@@ -1129,16 +1129,16 @@ function MasterMerchant:LibAddonInit()
           tooltip = GetString(MM_NO_DATA_DEAL_TIP),
           min = 0,
           max = 5,
-          getFunc = function() return self:ActiveSettings().noSalesInfoDeal end,
-          setFunc = function(value) self:ActiveSettings().noSalesInfoDeal = value end,
+          getFunc = function() return self.savedVariables.noSalesInfoDeal end,
+          setFunc = function(value) self.savedVariables.noSalesInfoDeal = value end,
         },
         -- blacklisted players and guilds
         [8] = {
           type = 'editbox',
           name = GetString(MM_BLACKLIST_NAME),
           tooltip = GetString(MM_BLACKLIST_TIP),
-          getFunc = function() return self:ActiveSettings().blacklist end,
-          setFunc = function(value) self:ActiveSettings().blacklist = value end,
+          getFunc = function() return self.savedVariables.blacklist end,
+          setFunc = function(value) self.savedVariables.blacklist = value end,
         },
         -- customTimeframe
         [9] = {
@@ -1147,9 +1147,9 @@ function MasterMerchant:LibAddonInit()
           tooltip = GetString(MM_CUSTOM_TIMEFRAME_TIP),
           min = 1,
           max = 24 * 31,
-          getFunc = function() return self:ActiveSettings().customTimeframe end,
-          setFunc = function(value) self:ActiveSettings().customTimeframe = value
-            self:ActiveSettings().customTimeframeText = self:ActiveSettings().customTimeframe .. ' ' .. self:ActiveSettings().customTimeframeType
+          getFunc = function() return self.savedVariables.customTimeframe end,
+          setFunc = function(value) self.savedVariables.customTimeframe = value
+            self.savedVariables.customTimeframeText = self.savedVariables.customTimeframe .. ' ' .. self.savedVariables.customTimeframeType
           end,
         },
         -- shift time range
@@ -1158,9 +1158,9 @@ function MasterMerchant:LibAddonInit()
           name = GetString(MM_CUSTOM_TIMEFRAME_SCALE_NAME),
           tooltip = GetString(MM_CUSTOM_TIMEFRAME_SCALE_TIP),
           choices = {GetString(MM_CUSTOM_TIMEFRAME_HOURS),GetString(MM_CUSTOM_TIMEFRAME_DAYS),GetString(MM_CUSTOM_TIMEFRAME_WEEKS),GetString(MM_CUSTOM_TIMEFRAME_GUILD_WEEKS)},
-          getFunc = function() return self:ActiveSettings().customTimeframeType end,
-          setFunc = function(value) self:ActiveSettings().customTimeframeType = value
-            self:ActiveSettings().customTimeframeText = self:ActiveSettings().customTimeframe .. ' ' .. self:ActiveSettings().customTimeframeType
+          getFunc = function() return self.savedVariables.customTimeframeType end,
+          setFunc = function(value) self.savedVariables.customTimeframeType = value
+            self.savedVariables.customTimeframeText = self.savedVariables.customTimeframe .. ' ' .. self.savedVariables.customTimeframeType
           end,
         },
       },
@@ -1170,9 +1170,9 @@ function MasterMerchant:LibAddonInit()
       type = 'checkbox',
       name = GetString(SK_OPEN_MAIL_NAME),
       tooltip = GetString(SK_OPEN_MAIL_TIP),
-      getFunc = function() return self:ActiveSettings().openWithMail end,
+      getFunc = function() return self.savedVariables.openWithMail end,
       setFunc = function(value)
-        self:ActiveSettings().openWithMail = value
+        self.savedVariables.openWithMail = value
         local theFragment = ((settingsToUse.viewSize == ITEMS) and self.uiFragment) or ((settingsToUse.viewSize == GUILDS) and self.guildUiFragment) or self.listingUiFragment
         if value then
           -- Register for the mail scenes
@@ -1190,9 +1190,9 @@ function MasterMerchant:LibAddonInit()
       type = 'checkbox',
       name = GetString(SK_OPEN_STORE_NAME),
       tooltip = GetString(SK_OPEN_STORE_TIP),
-      getFunc = function() return self:ActiveSettings().openWithStore end,
+      getFunc = function() return self.savedVariables.openWithStore end,
       setFunc = function(value)
-        self:ActiveSettings().openWithStore = value
+        self.savedVariables.openWithStore = value
         local theFragment = ((settingsToUse.viewSize == ITEMS) and self.uiFragment) or ((settingsToUse.viewSize == GUILDS) and self.guildUiFragment) or self.listingUiFragment
         if value then
           -- Register for the store scene
@@ -1208,9 +1208,9 @@ function MasterMerchant:LibAddonInit()
       type = 'checkbox',
       name = GetString(SK_FULL_SALE_NAME),
       tooltip = GetString(SK_FULL_SALE_TIP),
-      getFunc = function() return self:ActiveSettings().showFullPrice end,
+      getFunc = function() return self.savedVariables.showFullPrice end,
       setFunc = function(value)
-        self:ActiveSettings().showFullPrice = value
+        self.savedVariables.showFullPrice = value
         MasterMerchant.listIsDirty[ITEMS] = true
         MasterMerchant.listIsDirty[GUILDS] = true
         MasterMerchant.listIsDirty[LISTINGS] = true
@@ -1251,40 +1251,40 @@ function MasterMerchant:LibAddonInit()
       type = 'checkbox',
       name = GetString(SK_SHOW_PRICING_NAME),
       tooltip = GetString(SK_SHOW_PRICING_TIP),
-      getFunc = function() return self:ActiveSettings().showPricing end,
-      setFunc = function(value) self:ActiveSettings().showPricing = value end,
+      getFunc = function() return self.savedVariables.showPricing end,
+      setFunc = function(value) self.savedVariables.showPricing = value end,
     },
     -- Whether or not to show the pricing graph in tooltips
     [10] = {
       type = 'checkbox',
       name = GetString(SK_SHOW_GRAPH_NAME),
       tooltip = GetString(SK_SHOW_GRAPH_TIP),
-      getFunc = function() return self:ActiveSettings().showGraph end,
-      setFunc = function(value) self:ActiveSettings().showGraph = value end,
+      getFunc = function() return self.savedVariables.showGraph end,
+      setFunc = function(value) self.savedVariables.showGraph = value end,
     },
   -- Whether or not to show tooltips on the graph points
     [11] = {
       type = 'checkbox',
       name = GetString(MM_GRAPH_INFO_NAME),
       tooltip = GetString(MM_GRAPH_INFO_TIP),
-      getFunc = function() return self:ActiveSettings().displaySalesDetails end,
-      setFunc = function(value) self:ActiveSettings().displaySalesDetails = value end,
+      getFunc = function() return self.savedVariables.displaySalesDetails end,
+      setFunc = function(value) self.savedVariables.displaySalesDetails = value end,
     },
     -- Whether or not to show the crafting costs data in tooltips
     [12] = {
       type = 'checkbox',
       name = GetString(SK_SHOW_CRAFT_COST_NAME),
       tooltip = GetString(SK_SHOW_CRAFT_COST_TIP),
-      getFunc = function() return self:ActiveSettings().showCraftCost end,
-      setFunc = function(value) self:ActiveSettings().showCraftCost = value end,
+      getFunc = function() return self.savedVariables.showCraftCost end,
+      setFunc = function(value) self.savedVariables.showCraftCost = value end,
     },
     -- Whether or not to show the quality/level adjustment buttons
     [13] = {
       type = 'checkbox',
       name = GetString(MM_LEVEL_QUALITY_NAME),
       tooltip = GetString(MM_LEVEL_QUALITY_TIP),
-      getFunc = function() return self:ActiveSettings().displayItemAnalysisButtons end,
-      setFunc = function(value) self:ActiveSettings().displayItemAnalysisButtons = value end,
+      getFunc = function() return self.savedVariables.displayItemAnalysisButtons end,
+      setFunc = function(value) self.savedVariables.displayItemAnalysisButtons = value end,
     },
 
     -- Should we show the stack price calculator?
@@ -1292,72 +1292,72 @@ function MasterMerchant:LibAddonInit()
       type = 'checkbox',
       name = GetString(SK_CALC_NAME),
       tooltip = GetString(SK_CALC_TIP),
-      getFunc = function() return self:ActiveSettings().showCalc end,
-      setFunc = function(value) self:ActiveSettings().showCalc = value end,
+      getFunc = function() return self.savedVariables.showCalc end,
+      setFunc = function(value) self.savedVariables.showCalc = value end,
     },
     -- should we trim outliers prices?
     [15] = {
       type = 'checkbox',
       name = GetString(SK_TRIM_OUTLIERS_NAME),
       tooltip = GetString(SK_TRIM_OUTLIERS_TIP),
-      getFunc = function() return self:ActiveSettings().trimOutliers end,
-      setFunc = function(value) self:ActiveSettings().trimOutliers = value end,
+      getFunc = function() return self.savedVariables.trimOutliers end,
+      setFunc = function(value) self.savedVariables.trimOutliers = value end,
     },
     -- should we trim off decimals?
     [16] = {
       type = 'checkbox',
       name = GetString(SK_TRIM_DECIMALS_NAME),
       tooltip = GetString(SK_TRIM_DECIMALS_TIP),
-      getFunc = function() return self:ActiveSettings().trimDecimals end,
-      setFunc = function(value) self:ActiveSettings().trimDecimals = value end,
+      getFunc = function() return self.savedVariables.trimDecimals end,
+      setFunc = function(value) self.savedVariables.trimDecimals = value end,
     },
     -- should we replace inventory values?
     [17] = {
       type = 'checkbox',
       name = GetString(MM_REPLACE_INVENTORY_VALUES_NAME),
       tooltip = GetString(MM_REPLACE_INVENTORY_VALUES_TIP),
-      getFunc = function() return self:ActiveSettings().replaceInventoryValues end,
-      setFunc = function(value) self:ActiveSettings().replaceInventoryValues = value end,
+      getFunc = function() return self.savedVariables.replaceInventoryValues end,
+      setFunc = function(value) self.savedVariables.replaceInventoryValues = value end,
     },
     -- should we display info on guild roster?
     [18] = {
       type = 'checkbox',
       name = GetString(SK_ROSTER_INFO_NAME),
       tooltip = GetString(SK_ROSTER_INFO_TIP),
-      getFunc = function() return self:ActiveSettings().diplayGuildInfo end,
-      setFunc = function(value) self:ActiveSettings().diplayGuildInfo = value end,
+      getFunc = function() return self.savedVariables.diplayGuildInfo end,
+      setFunc = function(value) self.savedVariables.diplayGuildInfo = value end,
     },
     -- should we display profit instead of margin?
     [19] = {
       type = 'checkbox',
       name = GetString(MM_SAUCY_NAME),
       tooltip = GetString(MM_SAUCY_TIP),
-      getFunc = function() return self:ActiveSettings().saucy end,
-      setFunc = function(value) self:ActiveSettings().saucy = value end,
+      getFunc = function() return self.savedVariables.saucy end,
+      setFunc = function(value) self.savedVariables.saucy = value end,
     },
     -- should we display a Min Profit Filter in AGS?
     [20] = {
       type = 'checkbox',
       name = GetString(MM_MIN_PROFIT_FILTER_NAME),
       tooltip = GetString(MM_MIN_PROFIT_FILTER_TIP),
-      getFunc = function() return self:ActiveSettings().minProfitFilter end,
-      setFunc = function(value) self:ActiveSettings().minProfitFilter = value end,
+      getFunc = function() return self.savedVariables.minProfitFilter end,
+      setFunc = function(value) self.savedVariables.minProfitFilter = value end,
     },
     -- should we auto advance to the next page?
     [21] = {
       type = 'checkbox',
       name = GetString(MM_AUTO_ADVANCE_NAME),
       tooltip = GetString(MM_AUTO_ADVANCE_TIP),
-      getFunc = function() return self:ActiveSettings().autoNext end,
-      setFunc = function(value) self:ActiveSettings().autoNext = value end,
+      getFunc = function() return self.savedVariables.autoNext end,
+      setFunc = function(value) self.savedVariables.autoNext = value end,
     },
     -- should we display the item listed message?
     [22] = {
       type = 'checkbox',
       name = GetString(MM_DISPLAY_LISTING_MESSAGE_NAME),
       tooltip = GetString(MM_DISPLAY_LISTING_MESSAGE_TIP),
-      getFunc = function() return self:ActiveSettings().displayListingMessage end,
-      setFunc = function(value) self:ActiveSettings().displayListingMessage = value end,
+      getFunc = function() return self.savedVariables.displayListingMessage end,
+      setFunc = function(value) self.savedVariables.displayListingMessage = value end,
     },
     -- Font to use
     [23] = {
@@ -1365,12 +1365,12 @@ function MasterMerchant:LibAddonInit()
       name = GetString(SK_WINDOW_FONT_NAME),
       tooltip = GetString(SK_WINDOW_FONT_TIP),
       choices = LMP:List(LMP.MediaType.FONT),
-      getFunc = function() return self:ActiveSettings().windowFont end,
+      getFunc = function() return self.savedVariables.windowFont end,
       setFunc = function(value)
-        self:ActiveSettings().windowFont = value
+        self.savedVariables.windowFont = value
         self:UpdateFonts()
-        if self:ActiveSettings().viewSize == ITEMS then self.scrollList:RefreshVisible()
-        elseif self:ActiveSettings().viewSize == GUILDS then self.guildScrollList:RefreshVisible()
+        if self.savedVariables.viewSize == ITEMS then self.scrollList:RefreshVisible()
+        elseif self.savedVariables.viewSize == GUILDS then self.guildScrollList:RefreshVisible()
         else self.listingScrollList:RefreshVisible() end
       end,
     },
@@ -1381,9 +1381,9 @@ function MasterMerchant:LibAddonInit()
       tooltip = GetString(MM_VERBOSE_TIP),
       min = 1,
       max = 7,
-      getFunc = function() return self:ActiveSettings().verbose end,
+      getFunc = function() return self.savedVariables.verbose end,
       setFunc = function(value)
-                  self:ActiveSettings().verbose = value
+                  self.savedVariables.verbose = value
                   self.savedVariables.verbose = value
                   MasterMerchant.verboseLevel = value
                 end,
@@ -1393,98 +1393,98 @@ function MasterMerchant:LibAddonInit()
       type = 'checkbox',
       name = GetString(SK_ACCOUNT_WIDE_NAME),
       tooltip = GetString(SK_ACCOUNT_WIDE_TIP),
-      getFunc = function() return self.acctSavedVariables.allSettingsAccount end,
+      getFunc = function() return self.savedVariables.allSettingsAccount end,
       setFunc = function(value)
         if value then
-          self.acctSavedVariables.showChatAlerts = self.savedVariables.showChatAlerts
-          self.acctSavedVariables.showChatAlerts = self.savedVariables.showMultiple
-          self.acctSavedVariables.openWithMail = self.savedVariables.openWithMail
-          self.acctSavedVariables.openWithStore = self.savedVariables.openWithStore
-          self.acctSavedVariables.showFullPrice = self.savedVariables.showFullPrice
-          self.acctSavedVariables.winLeft = self.savedVariables.winLeft
-          self.acctSavedVariables.winTop = self.savedVariables.winTop
-          self.acctSavedVariables.guildWinLeft = self.savedVariables.guildWinLeft
-          self.acctSavedVariables.guildWinTop = self.savedVariables.guildWinTop
-          self.acctSavedVariables.statsWinLeft = self.savedVariables.statsWinLeft
-          self.acctSavedVariables.statsWinTop = self.savedVariables.statsWinTop
-          self.acctSavedVariables.windowFont = self.savedVariables.windowFont
-          self.acctSavedVariables.showCalc = self.savedVariables.showCalc
-          self.acctSavedVariables.showPricing = self.savedVariables.showPricing
-          self.acctSavedVariables.showCraftCost = self.savedVariables.showCraftCost
-          self.acctSavedVariables.showGraph = self.savedVariables.showGraph
-          self.acctSavedVariables.scanFreq = self.savedVariables.scanFreq
-          self.acctSavedVariables.showAnnounceAlerts = self.savedVariables.showAnnounceAlerts
-          self.acctSavedVariables.alertSoundName = self.savedVariables.alertSoundName
-          self.acctSavedVariables.showUnitPrice = self.savedVariables.showUnitPrice
-          self.acctSavedVariables.viewSize = self.savedVariables.viewSize
-          self.acctSavedVariables.offlineSales = self.savedVariables.offlineSales
-          self.acctSavedVariables.feedbackWinLeft = self.savedVariables.feedbackWinLeft
-          self.acctSavedVariables.feedbackWinTop = self.savedVariables.feedbackWinTop
-          self.acctSavedVariables.trimOutliers = self.savedVariables.trimOutliers
-          self.acctSavedVariables.trimDecimals = self.savedVariables.trimDecimals
-          self.acctSavedVariables.replaceInventoryValues = self.savedVariables.replaceInventoryValues
-          self.acctSavedVariables.diplayGuildInfo = self.savedVariables.diplayGuildInfo
-          self.acctSavedVariables.focus1 = self.savedVariables.focus1
-          self.acctSavedVariables.focus2 = self.savedVariables.focus2
-          self.acctSavedVariables.defaultDays = self.savedVariables.defaultDays
-          self.acctSavedVariables.shiftDays = self.savedVariables.shiftDays
-          self.acctSavedVariables.ctrlDays = self.savedVariables.ctrlDays
-          self.acctSavedVariables.ctrlShiftDays = self.savedVariables.ctrlShiftDays
-          self.acctSavedVariables.blacklisted = self.savedVariables.blacklisted
-          self.acctSavedVariables.saucy = self.savedVariables.saucy
-          self.acctSavedVariables.minProfitFilter = self.savedVariables.minProfitFilter
-          self.acctSavedVariables.autoNext = self.savedVariables.autoNext
-          self.acctSavedVariables.displayListingMessage = self.savedVariables.displayListingMessage
-          self.acctSavedVariables.noSalesInfoDeal = self.savedVariables.noSalesInfoDeal
-          self.acctSavedVariables.displaySalesDetails = self.savedVariables.displaySalesDetails
-          self.acctSavedVariables.displayItemAnalysisButtons = self.savedVariables.displayItemAnalysisButtons
-          self.acctSavedVariables.verbose = self.savedVariables.verbose
+          self.savedVariables.showChatAlerts = self.savedVariables.showChatAlerts
+          self.savedVariables.showChatAlerts = self.savedVariables.showMultiple
+          self.savedVariables.openWithMail = self.savedVariables.openWithMail
+          self.savedVariables.openWithStore = self.savedVariables.openWithStore
+          self.savedVariables.showFullPrice = self.savedVariables.showFullPrice
+          self.savedVariables.winLeft = self.savedVariables.winLeft
+          self.savedVariables.winTop = self.savedVariables.winTop
+          self.savedVariables.guildWinLeft = self.savedVariables.guildWinLeft
+          self.savedVariables.guildWinTop = self.savedVariables.guildWinTop
+          self.savedVariables.statsWinLeft = self.savedVariables.statsWinLeft
+          self.savedVariables.statsWinTop = self.savedVariables.statsWinTop
+          self.savedVariables.windowFont = self.savedVariables.windowFont
+          self.savedVariables.showCalc = self.savedVariables.showCalc
+          self.savedVariables.showPricing = self.savedVariables.showPricing
+          self.savedVariables.showCraftCost = self.savedVariables.showCraftCost
+          self.savedVariables.showGraph = self.savedVariables.showGraph
+          self.savedVariables.scanFreq = self.savedVariables.scanFreq
+          self.savedVariables.showAnnounceAlerts = self.savedVariables.showAnnounceAlerts
+          self.savedVariables.alertSoundName = self.savedVariables.alertSoundName
+          self.savedVariables.showUnitPrice = self.savedVariables.showUnitPrice
+          self.savedVariables.viewSize = self.savedVariables.viewSize
+          self.savedVariables.offlineSales = self.savedVariables.offlineSales
+          self.savedVariables.feedbackWinLeft = self.savedVariables.feedbackWinLeft
+          self.savedVariables.feedbackWinTop = self.savedVariables.feedbackWinTop
+          self.savedVariables.trimOutliers = self.savedVariables.trimOutliers
+          self.savedVariables.trimDecimals = self.savedVariables.trimDecimals
+          self.savedVariables.replaceInventoryValues = self.savedVariables.replaceInventoryValues
+          self.savedVariables.diplayGuildInfo = self.savedVariables.diplayGuildInfo
+          self.savedVariables.focus1 = self.savedVariables.focus1
+          self.savedVariables.focus2 = self.savedVariables.focus2
+          self.savedVariables.defaultDays = self.savedVariables.defaultDays
+          self.savedVariables.shiftDays = self.savedVariables.shiftDays
+          self.savedVariables.ctrlDays = self.savedVariables.ctrlDays
+          self.savedVariables.ctrlShiftDays = self.savedVariables.ctrlShiftDays
+          self.savedVariables.blacklisted = self.savedVariables.blacklisted
+          self.savedVariables.saucy = self.savedVariables.saucy
+          self.savedVariables.minProfitFilter = self.savedVariables.minProfitFilter
+          self.savedVariables.autoNext = self.savedVariables.autoNext
+          self.savedVariables.displayListingMessage = self.savedVariables.displayListingMessage
+          self.savedVariables.noSalesInfoDeal = self.savedVariables.noSalesInfoDeal
+          self.savedVariables.displaySalesDetails = self.savedVariables.displaySalesDetails
+          self.savedVariables.displayItemAnalysisButtons = self.savedVariables.displayItemAnalysisButtons
+          self.savedVariables.verbose = self.savedVariables.verbose
         else
-          self.savedVariables.showChatAlerts = self.acctSavedVariables.showChatAlerts
-          self.savedVariables.showChatAlerts = self.acctSavedVariables.showMultiple
-          self.savedVariables.openWithMail = self.acctSavedVariables.openWithMail
-          self.savedVariables.openWithStore = self.acctSavedVariables.openWithStore
-          self.savedVariables.showFullPrice = self.acctSavedVariables.showFullPrice
-          self.savedVariables.winLeft = self.acctSavedVariables.winLeft
-          self.savedVariables.winTop = self.acctSavedVariables.winTop
-          self.savedVariables.guildWinLeft = self.acctSavedVariables.guildWinLeft
-          self.savedVariables.guildWinTop = self.acctSavedVariables.guildWinTop
-          self.savedVariables.statsWinLeft = self.acctSavedVariables.statsWinLeft
-          self.savedVariables.statsWinTop = self.acctSavedVariables.statsWinTop
-          self.savedVariables.windowFont = self.acctSavedVariables.windowFont
-          self.savedVariables.showPricing = self.acctSavedVariables.showPricing
-          self.savedVariables.showCraftCost = self.acctSavedVariables.showCraftCost
-          self.savedVariables.showGraph = self.acctSavedVariables.showGraph
-          self.savedVariables.showCalc = self.acctSavedVariables.showCalc
-          self.savedVariables.scanFreq = self.acctSavedVariables.scanFreq
-          self.savedVariables.showAnnounceAlerts = self.acctSavedVariables.showAnnounceAlerts
-          self.savedVariables.alertSoundName = self.acctSavedVariables.alertSoundName
-          self.savedVariables.showUnitPrice = self.acctSavedVariables.showUnitPrice
-          self.savedVariables.viewSize = self.acctSavedVariables.viewSize
-          self.savedVariables.offlineSales = self.acctSavedVariables.offlineSales
-          self.savedVariables.feedbackWinLeft = self.acctSavedVariables.feedbackWinLeft
-          self.savedVariables.feedbackWinTop = self.acctSavedVariables.feedbackWinTop
-          self.savedVariables.trimOutliers = self.acctSavedVariables.trimOutliers
-          self.savedVariables.trimDecimals = self.acctSavedVariables.trimDecimals
-          self.savedVariables.replaceInventoryValues = self.acctSavedVariables.replaceInventoryValues
-          self.savedVariables.diplayGuildInfo = self.acctSavedVariables.diplayGuildInfo
-          self.savedVariables.focus1 = self.acctSavedVariables.focus1
-          self.savedVariables.focus2 = self.acctSavedVariables.focus2
-          self.savedVariables.defaultDays = self.acctSavedVariables.defaultDays
-          self.savedVariables.shiftDays = self.acctSavedVariables.shiftDays
-          self.savedVariables.ctrlDays = self.acctSavedVariables.ctrlDays
-          self.savedVariables.ctrlShiftDays = self.acctSavedVariables.ctrlShiftDays
-          self.savedVariables.blacklisted = self.acctSavedVariables.blacklisted
-          self.savedVariables.saucy = self.acctSavedVariables.saucy
-          self.savedVariables.minProfitFilter = self.acctSavedVariables.minProfitFilter
-          self.savedVariables.autoNext = self.acctSavedVariables.autoNext
-          self.savedVariables.displayListingMessage = self.acctSavedVariables.displayListingMessage
-          self.savedVariables.noSalesInfoDeal = self.acctSavedVariables.noSalesInfoDeal
-          self.savedVariables.displaySalesDetails = self.acctSavedVariables.displaySalesDetails
-          self.savedVariables.displayItemAnalysisButtons = self.acctSavedVariables.displayItemAnalysisButtons
-          self.savedVariables.verbose = self.acctSavedVariables.verbose
+          self.savedVariables.showChatAlerts = self.savedVariables.showChatAlerts
+          self.savedVariables.showChatAlerts = self.savedVariables.showMultiple
+          self.savedVariables.openWithMail = self.savedVariables.openWithMail
+          self.savedVariables.openWithStore = self.savedVariables.openWithStore
+          self.savedVariables.showFullPrice = self.savedVariables.showFullPrice
+          self.savedVariables.winLeft = self.savedVariables.winLeft
+          self.savedVariables.winTop = self.savedVariables.winTop
+          self.savedVariables.guildWinLeft = self.savedVariables.guildWinLeft
+          self.savedVariables.guildWinTop = self.savedVariables.guildWinTop
+          self.savedVariables.statsWinLeft = self.savedVariables.statsWinLeft
+          self.savedVariables.statsWinTop = self.savedVariables.statsWinTop
+          self.savedVariables.windowFont = self.savedVariables.windowFont
+          self.savedVariables.showPricing = self.savedVariables.showPricing
+          self.savedVariables.showCraftCost = self.savedVariables.showCraftCost
+          self.savedVariables.showGraph = self.savedVariables.showGraph
+          self.savedVariables.showCalc = self.savedVariables.showCalc
+          self.savedVariables.scanFreq = self.savedVariables.scanFreq
+          self.savedVariables.showAnnounceAlerts = self.savedVariables.showAnnounceAlerts
+          self.savedVariables.alertSoundName = self.savedVariables.alertSoundName
+          self.savedVariables.showUnitPrice = self.savedVariables.showUnitPrice
+          self.savedVariables.viewSize = self.savedVariables.viewSize
+          self.savedVariables.offlineSales = self.savedVariables.offlineSales
+          self.savedVariables.feedbackWinLeft = self.savedVariables.feedbackWinLeft
+          self.savedVariables.feedbackWinTop = self.savedVariables.feedbackWinTop
+          self.savedVariables.trimOutliers = self.savedVariables.trimOutliers
+          self.savedVariables.trimDecimals = self.savedVariables.trimDecimals
+          self.savedVariables.replaceInventoryValues = self.savedVariables.replaceInventoryValues
+          self.savedVariables.diplayGuildInfo = self.savedVariables.diplayGuildInfo
+          self.savedVariables.focus1 = self.savedVariables.focus1
+          self.savedVariables.focus2 = self.savedVariables.focus2
+          self.savedVariables.defaultDays = self.savedVariables.defaultDays
+          self.savedVariables.shiftDays = self.savedVariables.shiftDays
+          self.savedVariables.ctrlDays = self.savedVariables.ctrlDays
+          self.savedVariables.ctrlShiftDays = self.savedVariables.ctrlShiftDays
+          self.savedVariables.blacklisted = self.savedVariables.blacklisted
+          self.savedVariables.saucy = self.savedVariables.saucy
+          self.savedVariables.minProfitFilter = self.savedVariables.minProfitFilter
+          self.savedVariables.autoNext = self.savedVariables.autoNext
+          self.savedVariables.displayListingMessage = self.savedVariables.displayListingMessage
+          self.savedVariables.noSalesInfoDeal = self.savedVariables.noSalesInfoDeal
+          self.savedVariables.displaySalesDetails = self.savedVariables.displaySalesDetails
+          self.savedVariables.displayItemAnalysisButtons = self.savedVariables.displayItemAnalysisButtons
+          self.savedVariables.verbose = self.savedVariables.verbose
         end
-        self.acctSavedVariables.allSettingsAccount = value
+        self.savedVariables.allSettingsAccount = value
       end,
     },
   }
@@ -2978,177 +2978,149 @@ local function OnPlayerActivated(eventCode)
 end
 EVENT_MANAGER:RegisterForEvent(MasterMerchant.name.."_EventEnable", EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
 
+-- SavedVar defaults
+local Defaults =  {
+  ['showChatAlerts'] = false,
+  ['showMultiple'] = true,
+  ['openWithMail'] = true,
+  ['openWithStore'] = true,
+  ['showFullPrice'] = true,
+  ['winLeft'] = 30,
+  ['winTop'] = 30,
+  ['guildWinLeft'] = 30,
+  ['guildWinTop'] = 30,
+  ['statsWinLeft'] = 720,
+  ['statsWinTop'] = 820,
+  ['feedbackWinLeft'] = 720,
+  ['feedbackWinTop'] = 420,
+  ['windowFont'] = 'ProseAntique',
+  ['historyDepth'] = 30,
+  ['scanFreq'] = 300,
+  ['showAnnounceAlerts'] = true,
+  ['showCyroAlerts'] = true,
+  ['alertSoundName'] = 'Book_Acquired',
+  ['showUnitPrice'] = false,
+  ['viewSize'] = ITEMS,
+  ['offlineSales'] = true,
+  ['showPricing'] = true,
+  ['showCraftCost'] = true,
+  ['showGraph'] = true,
+  ['showCalc'] = true,
+  ['rankIndex'] = 1,
+  ['rankIndexRoster'] = 1,
+  ['viewBuyerSeller'] = 'buyer',
+  ['viewGuildBuyerSeller'] = 'seller',
+  ['trimOutliers'] = false,
+  ['trimDecimals'] = false,
+  ['replaceInventoryValues'] = false,
+  ['delayInit'] = true,
+  ['diplayGuildInfo'] = false,
+  ['displaySalesDetails'] = false,
+  ['displayItemAnalysisButtons'] = false,
+  ['noSalesInfoDeal'] = 2,
+  ['focus1'] = 10,
+  ['focus2'] = 3,
+  ['blacklist'] = '',
+  ['defaultDays'] = GetString(MM_RANGE_ALL),
+  ['shiftDays'] = GetString(MM_RANGE_FOCUS1),
+  ['ctrlDays'] = GetString(MM_RANGE_FOCUS2),
+  ['ctrlShiftDays'] = GetString(MM_RANGE_NONE),
+  ['saucy'] = false,
+  ['autoNext'] = false,
+  ['displayListingMessage'] = false,
+  ['verbose'] = 4,
+  ['dataLocations'] = {}
+  ['minItemCount'] = 20
+  ['maxItemCount'] = 5000
+  ["numEvents"] = {},
+  ["lastNonDuplicate"] = {},
+  ["eventIndex"] = {},
+  ["eventCount"] = {},
+  ["oldestEvent"] = {},
+}
+
+local function ConvertToFlatSavedVariables()
+  local min_count = 20
+  local max_count = 5000
+  local hist_days = 30
+  local temp_blacklist = ""
+  if ShopkeeperSavedVars.version == 2 then return end
+  for default_key, default_data in pairs(ShopkeeperSavedVars["Default"]) do
+    if default_key = "min_count" then
+      if min_count < default_data.min_count then min_count = default_data.min_count end
+    end
+    if default_key = "max_count" then
+      if max_count < default_data.max_count then max_count = default_data.max_count end
+    end
+    if default_key = "hist_days" then
+      if hist_days < default_data.hist_days then hist_days = default_data.hist_days end
+    end
+    if default_key = "temp_blacklist" then
+      if default_data.temp_blacklist ~= "" then temp_blacklist = default_data.temp_blacklist end
+    end
+    for account_name_one, account_name_one_data in pairs(default_data) do
+      for account_name_two, account_name_two_data in pairs(account_name_one_data) do
+        if account_name_two = "min_count" then
+          if min_count < account_name_two_data.min_count then min_count = account_name_two_data.min_count end
+        end
+        if account_name_two = "max_count" then
+          if max_count < account_name_two_data.max_count then max_count = account_name_two_data.max_count end
+        end
+        if account_name_two = "hist_days" then
+          if hist_days < account_name_two_data.hist_days then hist_days = account_name_two_data.hist_days end
+        end
+        if account_name_two = "temp_blacklist" then
+          if account_name_two_data.temp_blacklist ~= "" then temp_blacklist = account_name_two_data.temp_blacklist end
+        end
+        for account_name_three, account_name_three_data in pairs(account_name_two_data) do
+          if account_name_three = "min_count" then
+            if min_count < account_name_three_data.min_count then min_count = account_name_three_data.min_count end
+          end
+          if account_name_three = "max_count" then
+            if max_count < account_name_three_data.max_count then max_count = account_name_three_data.max_count end
+          end
+          if account_name_three = "hist_days" then
+            if hist_days < account_name_three_data.hist_days then hist_days = account_name_three_data.hist_days end
+          end
+          if account_name_three = "temp_blacklist" then
+            if account_name_three_data.temp_blacklist ~= "" then temp_blacklist = account_name_three_data.temp_blacklist end
+          end
+        end
+      end
+    end
+  end
+  self.savedVariables = {}
+  self.savedVariables.version = 2
+  for key, value in pairs(Defaults) do
+    ShopkeeperSavedVars[key] = value
+  end
+  self.savedVariables.historyDepth = hist_days
+  self.savedVariables.minItemCount = min_count
+  self.savedVariables.maxItemCount = max_count
+  self.savedVariables.blacklist = temp_blacklist
+  self.savedVariables.dataLocations[GetWorldName()] = true
+  self.savedVariables.switchedToChampionRanks = (GetAPIVersion() >= 100015)
+end
+
+-- self.acctSavedVariables.delayInit = nil
+-- self:ActiveSettings().verbose = value
+
+-- self.systemSavedVariables.verbose = value
+-- self.savedVariables.verbose = value
 -- Init function
 function MasterMerchant:Initialize()
-  -- SavedVar defaults
-  local Defaults =  {
-    ['showChatAlerts'] = false,
-    ['showMultiple'] = true,
-    ['openWithMail'] = true,
-    ['openWithStore'] = true,
-    ['showFullPrice'] = true,
-    ['winLeft'] = 30,
-    ['winTop'] = 30,
-    ['guildWinLeft'] = 30,
-    ['guildWinTop'] = 30,
-    ['statsWinLeft'] = 720,
-    ['statsWinTop'] = 820,
-    ['feedbackWinLeft'] = 720,
-    ['feedbackWinTop'] = 420,
-    ['windowFont'] = 'ProseAntique',
-    ['historyDepth'] = 30,
-    ['scanFreq'] = 300,
-    ['showAnnounceAlerts'] = true,
-    ['showCyroAlerts'] = true,
-    ['alertSoundName'] = 'Book_Acquired',
-    ['showUnitPrice'] = false,
-    ['viewSize'] = ITEMS,
-    ['offlineSales'] = true,
-    ['showPricing'] = true,
-    ['showCraftCost'] = true,
-    ['showGraph'] = true,
-    ['showCalc'] = true,
-    ['rankIndex'] = 1,
-    ['rankIndexRoster'] = 1,
-    ['viewBuyerSeller'] = 'buyer',
-    ['viewGuildBuyerSeller'] = 'seller',
-    ['trimOutliers'] = false,
-    ['trimDecimals'] = false,
-    ['replaceInventoryValues'] = false,
-    ['delayInit'] = true,
-    ['diplayGuildInfo'] = false,
-    ['displaySalesDetails'] = false,
-    ['displayItemAnalysisButtons'] = false,
-    ['noSalesInfoDeal'] = 2,
-    ['focus1'] = 10,
-    ['focus2'] = 3,
-    ['blacklist'] = '',
-    ['defaultDays'] = GetString(MM_RANGE_ALL),
-    ['shiftDays'] = GetString(MM_RANGE_FOCUS1),
-    ['ctrlDays'] = GetString(MM_RANGE_FOCUS2),
-    ['ctrlShiftDays'] = GetString(MM_RANGE_NONE),
-    ['saucy'] = false,
-    ['autoNext'] = false,
-    ['displayListingMessage'] = false,
-    ['verbose'] = 4,
-    ["numEvents"] = {},
-    ["lastNonDuplicate"] = {},
-  }
-
-  local acctDefaults = {
-    ['lastScan'] = {},
-    ['newestItem'] = {},
-    ['targetTime'] = {},
-    ['SalesData'] = {},
-    ['allSettingsAccount'] = false,
-    ['showChatAlerts'] = false,
-    ['showMultiple'] = true,
-    ['openWithMail'] = true,
-    ['openWithStore'] = true,
-    ['showFullPrice'] = true,
-    ['winLeft'] = 30,
-    ['winTop'] = 30,
-    ['guildWinLeft'] = 30,
-    ['guildWinTop'] = 30,
-    ['statsWinLeft'] = 720,
-    ['statsWinTop'] = 820,
-    ['feedbackWinLeft'] = 720,
-    ['feedbackWinTop'] = 420,
-    ['windowFont'] = 'ProseAntique',
-    ['historyDepth'] = 30,
-    ['scanFreq'] = 300,
-    ['showAnnounceAlerts'] = true,
-    ['showCyroAlerts'] = true,
-    ['alertSoundName'] = 'Book_Acquired',
-    ['showUnitPrice'] = false,
-    ['viewSize'] = ITEMS,
-    ['offlineSales'] = true,
-    ['showPricing'] = true,
-    ['showCraftCost'] = true,
-    ['showGraph'] = true,
-    ['showCalc'] = true,
-    ['rankIndex'] = 1,
-    ['rankIndexRoster'] = 1,
-    ['viewBuyerSeller'] = 'buyer',
-    ['viewGuildBuyerSeller'] = 'seller',
-    ['trimOutliers'] = false,
-    ['trimDecimals'] = false,
-    ['replaceInventoryValues'] = false,
-    ['delayInit'] = true,
-    ['diplayGuildInfo'] = false,
-    ['displaySalesDetails'] = false,
-    ['displayItemAnalysisButtons'] = false,
-    ['noSalesInfoDeal'] = 2,
-    ['focus1'] = 10,
-    ['focus2'] = 3,
-    ['blacklist'] = '',
-    ['defaultDays'] = GetString(MM_RANGE_ALL),
-    ['shiftDays'] = GetString(MM_RANGE_FOCUS1),
-    ['ctrlDays'] = GetString(MM_RANGE_FOCUS2),
-    ['ctrlShiftDays'] = GetString(MM_RANGE_NONE),
-    ['saucy'] = false,
-    ['autoNext'] = false,
-    ['displayListingMessage'] = false,
-    ['verbose'] = 4,
-    ["numEvents"] = {},
-    ["lastNonDuplicate"] = {},
-  }
 
   -- Populate savedVariables
-  self.savedVariables = ZO_SavedVars:New('ShopkeeperSavedVars', 1, GetDisplayName(), Defaults)
-  -- self.acctSavedVariables.scanHistory is no longer used
-  self.acctSavedVariables = ZO_SavedVars:NewAccountWide('ShopkeeperSavedVars', 1, GetDisplayName(), acctDefaults)
   self.systemSavedVariables = ZO_SavedVars:NewAccountWide('ShopkeeperSavedVars', 1, nil, {}, nil, 'MasterMerchant')
+  self.savedVariables = ZO_SavedVars:NewAccountWide('ShopkeeperSavedVars', 1, GetDisplayName(), Defaults)
+  
+  ConvertToFlatSavedVariables()
 
   EVENT_MANAGER:RegisterForEvent(MasterMerchant.name.."_Initial", EVENT_PLAYER_ACTIVATED, function(...) MasterMerchant:PlayerLoaded(...) end)
 
-  -- Convert the old linear sales history to the new format
-  if self.acctSavedVariables.scanHistory then
-    for i = 1, #self.acctSavedVariables.scanHistory do
-      local v = self.acctSavedVariables.scanHistory[i]
-      local theIID = GetItemLinkItemId(v[3])
-      local itemIndex = self.makeIndexFromLink(v[3])
-      if not self.acctSavedVariables.SalesData[theIID] then self.acctSavedVariables.SalesData[theIID] = {} end
-      if MasterMerchant.acctSavedVariables.SalesData[theIID][itemIndex] then
-        table.insert(MasterMerchant.acctSavedVariables.SalesData[theIID][itemIndex]['sales'],
-          {buyer = v[1], guild = v[2], itemLink = v[3], quant = v[5], timestamp = v[6], price = v[7], seller = v[8], wasKiosk = v[9]})
-      else
-        MasterMerchant.acctSavedVariables.SalesData[theIID][itemIndex] = {
-          ['itemIcon'] = v[4],
-          ['sales'] = {{buyer = v[1], guild = v[2], itemLink = v[3], quant = v[5], timestamp = v[6], price = v[7], seller = v[8], wasKiosk = v[9]}}}
-      end
-
-      -- We track newest sales items in a savedVar now since we don't have a linear list to easily grab from
-      if not self.acctSavedVariables.newestItem[v[2]] then self.acctSavedVariables.newestItem[v[2]] = v[6]
-      elseif self.acctSavedVariables.newestItem[v[2]] < v[6] then self.acctSavedVariables.newestItem[v[2]] = v[6] end
-    end
-
-    -- Now that we're done with it, clear it out and change the one setting that has changed in magnitude
-    self.acctSavedVariables.scanHistory = nil
-
-    self.systemSavedVariables.historyDepth = 30
-
-    EVENT_MANAGER:RegisterForEvent(self.name, EVENT_PLAYER_ACTIVATED, function()
-        ReloadUI('ingame')
-    end)
-    error('Please /reloadui to convert move to the next step...')
-
-  end
-
-  -- Move the guild scanning variables to a system wide area
-  if (self.systemSavedVariables.delayInit == nil) then
-    self.systemSavedVariables.delayInit = self.acctSavedVariables.delayInit or false;
-  end
-  if (self.systemSavedVariables.newestItem == nil) then
-    self.systemSavedVariables.newestItem = self.acctSavedVariables.newestItem or {};
-  end
-  if (self.systemSavedVariables.lastScan == nil) then
-    self.systemSavedVariables.lastScan = self.acctSavedVariables.lastScan or {};
-  end
-
-  self.acctSavedVariables.delayInit = nil
-  self.acctSavedVariables.newestItem = nil
-  self.acctSavedVariables.lastScan = nil
+  self.savedVariables.delayInit = nil
+  self.savedVariables.newestItem = nil
+  self.savedVariables.lastScan = nil
 
   self.savedVariables.delayInit = nil
   self.savedVariables.newestItem = nil
@@ -3224,7 +3196,7 @@ function MasterMerchant:Initialize()
   MasterMerchant.verboseLevel = MasterMerchant:ActiveSettings().verbose or 4
 
   -- Move the old single addon sales history to the multi addon sales history
-  if self.acctSavedVariables.SalesData then
+  if self.savedVariables.SalesData then
     local action = {
       [0] = function (k, v) MM00Data.savedVariables.SalesData[k] = v end,
       [1] = function (k, v) MM01Data.savedVariables.SalesData[k] = v end,
@@ -3244,7 +3216,7 @@ function MasterMerchant:Initialize()
       [15] = function (k, v) MM15Data.savedVariables.SalesData[k] = v end
     }
 
-    for k, v in pairs(self.acctSavedVariables.SalesData) do
+    for k, v in pairs(self.savedVariables.SalesData) do
       local hash
       for j, dataList in pairs(v) do
         local item = dataList['sales'][1]
@@ -3253,7 +3225,7 @@ function MasterMerchant:Initialize()
       end
       action[hash](k, v)
     end
-    self.acctSavedVariables.SalesData = nil
+    self.savedVariables.SalesData = nil
   end
 
   -- Covert each data file as needed
@@ -3495,7 +3467,7 @@ function MasterMerchant:Initialize()
     end
     --]]
 
-    if false and self:ActiveSettings().autoNext then
+    if false and self.savedVariables.autoNext then
 
       local localRunInitialSetup = TRADING_HOUSE.RunInitialSetup
       TRADING_HOUSE.RunInitialSetup = function (self, ...)
@@ -3769,7 +3741,7 @@ function MasterMerchant:InitItemHistory()
       end
 
       -- Set up guild roster info
-      if self:ActiveSettings().diplayGuildInfo then
+      if self.savedVariables.diplayGuildInfo then
         self:initRosterStats()
       end
 
@@ -3801,7 +3773,7 @@ function MasterMerchant:InitScrollLists()
 
     MasterMerchant.v(2, '|cFFFF00Master Merchant Initialized -- Holding information on ' .. self.totalRecords .. ' sales.|r')
 
-    self.isFirstScan = self:ActiveSettings().offlineSales
+    self.isFirstScan = self.savedVariables.offlineSales
     if NonContiguousCount(self.salesData) > 0 then
       self.veryFirstScan = false
     else

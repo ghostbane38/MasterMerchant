@@ -558,12 +558,12 @@ end
 -- A simple utility function to return which set of settings are active,
 -- based on the allSettingsAccount option setting.
 function MasterMerchant:ActiveSettings()
-  return ((self.acctSavedVariables.allSettingsAccount and self.acctSavedVariables) or
+  return ((self.savedVariables.allSettingsAccount and self.acctSavedVariables) or
           self.savedVariables)
 end
 
 function MasterMerchant:ActiveWindow()
-  return ((self:ActiveSettings().viewSize == 'full' and MasterMerchantWindow) or MasterMerchantGuildWindow)
+  return ((self.savedVariables.viewSize == 'full' and MasterMerchantWindow) or MasterMerchantGuildWindow)
 end
 
 -- A utility function to grab all the keys of the sound table
